@@ -1,0 +1,300 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { fetchProducts, fetchServices, fetchTestimonials, fetchContentByType, getOptimizedImage, generateSlug, type SheetItem, type Service, type Testimonial } from '../utils/sheet';
+import { APP_CONFIG } from '../config';
+
+const { whatsappNumber } = APP_CONFIG.contact;
+const { cloudinaryCloudName } = APP_CONFIG.images;
+const WHATSAPP_NUMBER = whatsappNumber;
+const CLOUDINARY_CLOUD_NAME = cloudinaryCloudName;
+
+const CONTENT_CSV_URL = import.meta.env.PUBLIC_CONTENT_CSV_URL || "";
+const SHEET_CSV_URL = import.meta.env.PUBLIC_SHEET_CSV_URL || "";
+const SERVICES_CSV_URL = import.meta.env.PUBLIC_SERVICES_CSV_URL || "";
+const TESTIMONIALS_CSV_URL = import.meta.env.PUBLIC_TESTIMONIALS_CSV_URL || "";
+
+let items: SheetItem[] = [];
+let services: Service[] = [];
+let testimonials: Testimonial[] = [];
+
+const SHEET_BASE_URL = import.meta.env.PUBLIC_SHEET_CSV_URL || "";
+
+// Standard Google Sheets GIDs for first 4 tabs (usually 0, but often sequential or specific)
+// Ideally, the user provides specific URLs, but we can try to "guess" or append if they provided a base sheet URL
+const PRODUCTS_GID = "0";      // First tab
+const SERVICES_GID = "111111"; // Placeholder - user needs to provide exact GIDs or separate URLs
+const TESTIMONIALS_GID = "222222"; 
+
+// Helper to append GID if not present
+const getSheetUrl = (baseUrl: string, gid: string) => {
+  if (!baseUrl) return "";
+  if (baseUrl.includes("gid=")) return baseUrl; // Already has a GID, use as is
+  return `${baseUrl}&gid=${gid}`;
+}
+
+if (CONTENT_CSV_URL) {
+  console.log(' Using Universal CSV:', CONTENT_CSV_URL);
+  items = await fetchContentByType(CONTENT_CSV_URL, 'product') as SheetItem[];
+  services = await fetchContentByType(CONTENT_CSV_URL, 'service') as Service[];
+  testimonials = await fetchContentByType(CONTENT_CSV_URL, 'testimonial') as Testimonial[];
+} else {
+  console.log(' Using Separate CSVs logic');
+  
+  // If we only have ONE main sheet URL in PUBLIC_SHEET_CSV_URL, we might need to use it for all
+  // But Google Sheets exports specific tabs via "gid". 
+  // If the user provided a URL ending in output=csv without gid, it defaults to the first tab (gid=0).
+  
+  // 1. Products (First tab / default)
+  const productsUrl = SHEET_CSV_URL || getSheetUrl(SHEET_CSV_URL, PRODUCTS_GID);
+  if (productsUrl) {
+      console.log(' Fetching Products from:', productsUrl);
+      items = await fetchProducts(productsUrl);
+  }
+
+  // 2. Services (Try to get from specific env var OR separate tab if we knew the GID)
+  // Since we don't know the exact GID for services/testimonials, we rely on the specific ENV vars
+  // OR we try to fetch from the main sheet if items are empty (assuming universal structure?)
+  // For now, respect the separate variables strictly as per original design.
+  
+  if (SERVICES_CSV_URL) {
+      services = await fetchServices(SERVICES_CSV_URL);
+  } else if (SHEET_CSV_URL && services.length === 0) {
+     // Fallback: Check if the main sheet actually has "type" column? 
+     // We can try to fetch the main sheet as "ContentByType" essentially treating it as a universal sheet
+     // This handles the case where the user put the universal sheet URL into PUBLIC_SHEET_CSV_URL
+     console.log(' Checking if main sheet behaves as Universal Sheet...');
+     const potentialServices = await fetchContentByType(SHEET_CSV_URL, 'service') as Service[];
+     if (potentialServices.length > 0) {
+         console.log(' Found services in main sheet!');
+         services = potentialServices;
+         // If we found services, likely products and testimonials are there too
+         if (items.length === 0) items = await fetchContentByType(SHEET_CSV_URL, 'product') as SheetItem[];
+         testimonials = await fetchContentByType(SHEET_CSV_URL, 'testimonial') as Testimonial[];
+     }
+  }
+
+  if (TESTIMONIALS_CSV_URL) testimonials = await fetchTestimonials(TESTIMONIALS_CSV_URL);
+}
+
+console.log(`Fetched ${items.length} products, ${services.length} services, ${testimonials.length} testimonials.`);
+
+---
+
+<Layout title="Welcome">
+  <!-- ============================================ -->
+  <!-- HERO SECTION -->
+  <!-- ============================================ -->
+  <section class="relative overflow-hidden bg-stone-50 pt-16 pb-24 md:pt-24 md:pb-32">
+    <!-- Background blobs -->
+    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-amber-200/30 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 bg-orange-200/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+
+    <div class="container mx-auto px-4 relative">
+      <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        
+        <!-- Content -->
+        <div class="text-center lg:text-left space-y-8">
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold mb-4">
+             <span class="w-2 h-2 bg-amber-600 rounded-full animate-pulse"></span>
+             Premium Quality, Island-wide Delivery
+          </div>
+          <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-stone-900">
+            Elevate Your <br/>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
+              Lifestyle
+            </span>
+          </h1>
+          <p class="text-lg md:text-xl text-stone-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+            Discover our curated collection of high-quality products. We bring the best of the world directly to your doorstep.
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
+            <a 
+              href="#products" 
+              class="inline-flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            >
+              Browse Shop
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            </a>
+            <a 
+              href="#services" 
+              class="inline-flex items-center justify-center gap-2 bg-white text-stone-900 border border-stone-200 hover:border-amber-500 hover:text-amber-600 px-8 py-4 rounded-full font-semibold shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
+            >
+              Our Services
+            </a>
+          </div>
+        </div>
+
+        <!-- Hero Image -->
+        <div class="relative max-w-lg mx-auto lg:max-w-none">
+          <div class="relative rounded-3xl overflow-hidden shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500 border-4 border-white">
+            <img 
+              src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?q=80&w=2070&auto=format&fit=crop"
+              alt="Premium Lifestyle"
+              class="w-full h-auto object-cover aspect-square"
+              loading="eager"
+            />
+          </div>
+          <!-- Floating badge -->
+          <div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-bounce hover:animate-none">
+             <div class="bg-green-100 p-3 rounded-full text-green-600">
+               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+             </div>
+             <div>
+               <p class="text-sm text-stone-500 font-medium">Customer Review</p>
+               <p class="text-stone-900 font-bold">4.9/5 "Excellent"</p>
+             </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- SERVICES SUMMARY -->
+  <!-- ============================================ -->
+  <section id="services" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4">Why Choose Us?</h2>
+        <p class="text-stone-600">We go beyond just selling products. We provide a complete premium experience.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        {services.slice(0, 3).map((service) => (
+          <div class="bg-stone-50 rounded-2xl p-8 hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-amber-100 group">
+             <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+               <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={service.icon} />
+               </svg>
+             </div>
+             <h3 class="text-xl font-bold text-stone-900 mb-3">{service.title}</h3>
+             <p class="text-stone-600 leading-relaxed mb-4">{service.description}</p>
+             <a href="/services" class="text-amber-600 font-medium hover:text-amber-700 inline-flex items-center gap-1 group/link">
+               Learn more <span class="group-hover/link:translate-x-1 transition-transform">&rarr;</span>
+             </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- PRODUCTS GRID -->
+  <!-- ============================================ -->
+  <section id="products" class="py-20 bg-stone-50">
+    <div class="container mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+         <span class="text-amber-600 font-semibold tracking-wider uppercase text-sm">New Arrivals</span>
+         <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mt-2 mb-4">Latest Products</h2>
+         <p class="text-stone-600">Hand-picked collection just for you.</p>
+      </div>
+
+      {items.length > 0 ? (
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {items.map((item) => {
+               const slug = item.id || generateSlug(item.name || "product");
+               return (
+                <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-stone-100">
+                  <!-- Product Image -->
+                  <a href={`/product/${slug}`} class="block relative overflow-hidden aspect-[4/5] bg-stone-100">
+                    <img 
+                      src={getOptimizedImage(item.imageUrl || "", CLOUDINARY_CLOUD_NAME)}
+                      alt={item.name || "Product"}
+                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      loading="lazy"
+                    />
+                    {item.category && (
+                      <div class="absolute top-3 left-3 bg-white/90 backdrop-blur text-stone-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                        {item.category}
+                      </div>
+                    )}
+                    <!-- Overlay View Button -->
+                    <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <span class="bg-white text-stone-900 px-6 py-2 rounded-full font-medium shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">View Details</span>
+                    </div>
+                  </a>
+
+                  <!-- Product Details -->
+                  <div class="p-5">
+                    <h3 class="font-bold text-stone-900 group-hover:text-amber-600 transition-colors line-clamp-1 mb-1">
+                      <a href={`/product/${slug}`}>{item.name || "Product Name"}</a>
+                    </h3>
+                    
+                    <div class="flex items-center justify-between mt-3">
+                      {item.price && (
+                        <div class="text-lg font-bold text-stone-800">
+                          Rs. {item.price}
+                        </div>
+                      )}
+                      
+                      <button 
+                        class="text-amber-600 hover:bg-amber-50 p-2 rounded-full transition-colors"
+                        title="Add to Wishlist"
+                      >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-stone-200">
+            <div class="inline-block p-6 bg-stone-50 rounded-full mb-4">
+              <svg class="w-12 h-12 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-stone-800 mb-2">No Products Found</h3>
+            <p class="text-stone-500 max-w-sm mx-auto mb-6">
+              Connect your Google Sheet CSV to populate this section with your products.
+            </p>
+             <a 
+                href={`https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("I need help setting up the website.")}`}
+                target="_blank"
+                class="inline-flex items-center gap-2 text-green-600 font-semibold hover:underline"
+              >
+                Contact Support
+              </a>
+          </div>
+        )}
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- TESTIMONIALS SECTION -->
+  <!-- ============================================ -->
+  <section class="py-20 bg-white overflow-hidden">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4">Client Stories</h2>
+        <p class="text-stone-600">Don't just take our word for it.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8">
+        {testimonials.map((testimonial) => (
+          <div class="bg-stone-50 p-8 rounded-2xl relative">
+            <!-- Quote Icon -->
+            <div class="absolute top-6 right-6 text-amber-200">
+              <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.0166 21L5.0166 18C5.0166 16.8954 5.91203 16 7.0166 16H10.0166C10.5689 16 11.0166 15.5523 11.0166 15V9C11.0166 8.44772 10.5689 8 10.0166 8H6.0166C5.46432 8 5.0166 8.44772 5.0166 9V11C5.0166 11.5523 4.56889 12 4.0166 12H3.0166V5H13.0166V15C13.0166 18.3137 10.3303 21 7.0166 21H5.0166Z"></path></svg>
+            </div>
+            
+            <p class="text-stone-700 italic mb-6 relative z-10 leading-relaxed">"{testimonial.content}"</p>
+            
+            <div class="flex items-center gap-4">
+              <img src={getOptimizedImage(testimonial.avatarUrl || "", CLOUDINARY_CLOUD_NAME)} alt={testimonial.name} class="w-12 h-12 rounded-full object-cover" />
+              <div>
+                <h4 class="font-bold text-stone-900 text-sm">{testimonial.name}</h4>
+                <p class="text-stone-500 text-xs">{testimonial.role}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+</Layout>

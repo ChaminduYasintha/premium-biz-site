@@ -1,0 +1,122 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { fetchServices, fetchContentByType, getOptimizedImage, type Service } from '../utils/sheet';
+import { APP_CONFIG } from '../config';
+
+const { whatsappNumber, whatsappMessage } = APP_CONFIG.contact;
+const { cloudinaryCloudName } = APP_CONFIG.images;
+const WHATSAPP_NUMBER = whatsappNumber;
+const WHATSAPP_MESSAGE = whatsappMessage;
+const CLOUDINARY_CLOUD_NAME = cloudinaryCloudName;
+
+const CONTENT_CSV_URL = import.meta.env.PUBLIC_CONTENT_CSV_URL || "";
+const SERVICES_CSV_URL = import.meta.env.PUBLIC_SERVICES_CSV_URL || "";
+
+let services: Service[] = [];
+
+if (CONTENT_CSV_URL) {
+  services = await fetchContentByType(CONTENT_CSV_URL, 'service') as Service[];
+} else if (SERVICES_CSV_URL) {
+  services = await fetchServices(SERVICES_CSV_URL);
+}
+
+---
+
+<Layout title="Our Services" description="Explore our premium range of services tailored to your needs.">
+  
+  <!-- Header -->
+  <section class="bg-stone-900 text-white py-20 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-amber-900/40 to-black/60 z-10"></div>
+    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070')] bg-cover bg-center"></div>
+    
+    <div class="container mx-auto px-4 relative z-20 text-center">
+      <h1 class="text-4xl md:text-6xl font-bold mb-6">Our Premium Services</h1>
+      <p class="text-lg text-stone-300 max-w-2xl mx-auto">
+        Dedicated to delivering excellence in every interaction. We provide bespoke solutions for individuals and businesses.
+      </p>
+    </div>
+  </section>
+
+  <!-- Services List -->
+  <section class="py-20 bg-stone-50">
+    <div class="container mx-auto px-4">
+      <div class="grid gap-12">
+        {services.map((service, index) => (
+          <div class={`flex flex-col ${index % 2 === 1 ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-10 md:gap-20 group`}>
+            
+            <!-- Image -->
+            <div class="w-full md:w-1/2">
+              <div class="relative rounded-2xl overflow-hidden shadow-xl aspect-video group-hover:shadow-2xl transition-all duration-500">
+                <img 
+                  src={getOptimizedImage(service.imageUrl || "", CLOUDINARY_CLOUD_NAME)} 
+                  alt={service.title} 
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+                />
+                <div class="absolute inset-0 bg-stone-900/10 group-hover:bg-transparent transition-colors"></div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="w-full md:w-1/2 space-y-6">
+              <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 text-amber-600 mb-2">
+                <!-- Simple icon rendering -->
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={service.icon} />
+                </svg>
+              </div>
+              
+              <h2 class="text-3xl font-bold text-stone-800 group-hover:text-amber-600 transition-colors">
+                {service.title}
+              </h2>
+              
+              <p class="text-stone-600 leading-relaxed text-lg">
+                {service.description}
+              </p>
+
+              {service.features && (
+                <ul class="space-y-3 pt-2">
+                  {(typeof service.features === 'string' ? service.features.split('|') : [service.features]).map((feature: string) => (
+                    <li class="flex items-center gap-3 text-stone-700">
+                      <svg class="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {feature.trim()}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div class="pt-4">
+                <a 
+                  href={`https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`I'm interested in your ${service.title} service.`)}`}
+                  target="_blank"
+                  class="inline-flex items-center gap-2 text-amber-600 font-semibold hover:text-amber-700 hover:translate-x-1 transition-all"
+                >
+                  Inquire Now
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 bg-amber-600 text-white text-center">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Get Started?</h2>
+      <p class="text-amber-100 max-w-2xl mx-auto mb-10 text-lg">
+        Contact us today to discuss your requirements and receive a personalized quote.
+      </p>
+      <a 
+        href={`https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`}
+        target="_blank"
+        class="inline-block bg-white text-amber-600 px-10 py-4 rounded-full font-bold shadow-lg hover:shadow-xl hover:bg-stone-100 hover:-translate-y-1 transition-all duration-300"
+      >
+        Contact Us
+      </a>
+    </div>
+  </section>
+</Layout>
