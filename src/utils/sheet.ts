@@ -309,9 +309,17 @@ export function parsePortfolioCSV(csvText: string): PortfolioItem[] {
 
 export async function fetchProducts(csvUrl: string): Promise<SheetItem[]> {
     if (!csvUrl) return [];
-    console.log(`🌐 [fetchProducts] Fetching from: ${csvUrl}`);
+    // Add cache-busting timestamp to force fresh data
+    const urlWithCacheBust = `${csvUrl}&_t=${Date.now()}`;
+    console.log(`🌐 [fetchProducts] Fetching from: ${urlWithCacheBust}`);
     try {
-        const response = await fetch(csvUrl);
+        const response = await fetch(urlWithCacheBust, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const csvText = await response.text();
         console.log(`✅ [fetchProducts] Received ${csvText.length} bytes. Preview: ${csvText.substring(0, 100).replace(/\n/g, '\\n')}...`);
@@ -330,9 +338,16 @@ export async function fetchProducts(csvUrl: string): Promise<SheetItem[]> {
 
 export async function fetchServices(csvUrl: string): Promise<Service[]> {
     if (!csvUrl) return [];
-    console.log(`🌐 [fetchServices] Fetching from: ${csvUrl}`);
+    const urlWithCacheBust = `${csvUrl}&_t=${Date.now()}`;
+    console.log(`🌐 [fetchServices] Fetching from: ${urlWithCacheBust}`);
     try {
-        const response = await fetch(csvUrl);
+        const response = await fetch(urlWithCacheBust, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const csvText = await response.text();
         console.log(`✅ [fetchServices] Received ${csvText.length} bytes.`);
@@ -345,9 +360,16 @@ export async function fetchServices(csvUrl: string): Promise<Service[]> {
 
 export async function fetchTestimonials(csvUrl: string): Promise<Testimonial[]> {
     if (!csvUrl) return [];
-    console.log(`🌐 [fetchTestimonials] Fetching from: ${csvUrl}`);
+    const urlWithCacheBust = `${csvUrl}&_t=${Date.now()}`;
+    console.log(`🌐 [fetchTestimonials] Fetching from: ${urlWithCacheBust}`);
     try {
-        const response = await fetch(csvUrl);
+        const response = await fetch(urlWithCacheBust, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const csvText = await response.text();
         console.log(`✅ [fetchTestimonials] Received ${csvText.length} bytes.`);
@@ -360,9 +382,16 @@ export async function fetchTestimonials(csvUrl: string): Promise<Testimonial[]> 
 
 export async function fetchPortfolio(csvUrl: string): Promise<PortfolioItem[]> {
     if (!csvUrl) return [];
-    console.log(`🌐 [fetchPortfolio] Fetching from: ${csvUrl}`);
+    const urlWithCacheBust = `${csvUrl}&_t=${Date.now()}`;
+    console.log(`🌐 [fetchPortfolio] Fetching from: ${urlWithCacheBust}`);
     try {
-        const response = await fetch(csvUrl);
+        const response = await fetch(urlWithCacheBust, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const csvText = await response.text();
         console.log(`✅ [fetchPortfolio] Received ${csvText.length} bytes.`);
@@ -477,9 +506,16 @@ function toPortfolio(item: UniversalContent): PortfolioItem {
 
 export async function fetchContentByType(csvUrl: string, contentType: 'product' | 'service' | 'testimonial' | 'portfolio'): Promise<SheetItem[] | Service[] | Testimonial[] | PortfolioItem[]> {
     if (!csvUrl) return [];
+    const urlWithCacheBust = `${csvUrl}&_t=${Date.now()}`;
 
     try {
-        const response = await fetch(csvUrl);
+        const response = await fetch(urlWithCacheBust, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const csvText = await response.text();
         const allContent = parseUniversalCSV(csvText);

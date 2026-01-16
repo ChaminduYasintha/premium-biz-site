@@ -1,0 +1,36 @@
+name: Scheduled Rebuild
+
+# This workflow rebuilds your site automatically at specified times
+# Perfect if you update your Google Sheet on a regular schedule
+
+on:
+  # Scheduled rebuilds (uses cron syntax)
+  schedule:
+    # Rebuild every day at 9:00 AM UTC (2:30 PM Sri Lanka Time)
+    - cron: '0 9 * * *'
+    
+    # Rebuild every 6 hours
+    # - cron: '0 */6 * * *'
+    
+    # Rebuild every hour
+    # - cron: '0 * * * *'
+  
+  # Also allow manual triggering from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Trigger Cloudflare Pages Rebuild
+        run: |
+          echo "🚀 Triggering Cloudflare Pages rebuild..."
+          curl -X POST "${{ secrets.CLOUDFLARE_BUILD_HOOK }}"
+          echo "✅ Rebuild triggered!"
+      
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for deployment to complete (this may take 2-3 minutes)..."
+          sleep 180
+          echo "✅ Deployment should be complete now!"
