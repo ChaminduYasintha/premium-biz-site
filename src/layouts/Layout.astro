@@ -161,5 +161,28 @@ const navLinks = [
         scroll-behavior: smooth;
       }
     </style>
+
+    <!-- ============================================ -->
+    <!-- SUPABASE CLIENT-SIDE SCRIPTS -->
+    <!-- ============================================ -->
+    <!-- Supabase JS CDN -->
+    <script is:inline src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Environment Variables for Client-Side -->
+    <script is:inline define:vars={{ 
+      SUPABASE_URL: import.meta.env.PUBLIC_SUPABASE_URL,
+      SUPABASE_ANON_KEY: import.meta.env.PUBLIC_SUPABASE_ANON_KEY,
+      WHATSAPP_NUMBER: WHATSAPP_NUMBER
+    }}>
+      // Make environment variables available to client-side scripts
+      window.ENV = {
+        SUPABASE_URL: SUPABASE_URL,
+        SUPABASE_ANON_KEY: SUPABASE_ANON_KEY,
+        WHATSAPP_NUMBER: WHATSAPP_NUMBER
+      };
+    </script>
+
+    <!-- Properties Component -->
+    <script is:inline src="/properties-component.js"></script>
   </body>
 </html>
