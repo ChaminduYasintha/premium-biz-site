@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Properties - Find Your Dream Home</title>
+    <meta name="description"
+        content="Explore luxury properties with advanced filtering and comparison features. Find your perfect home today.">
+    <link rel="stylesheet" href="properties-styles.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <span class="logo-icon">🏠</span>
+                <span class="logo-text">Premium<span class="logo-accent">Estates</span></span>
+            </div>
+            <nav class="nav">
+                <a href="#" class="nav-link active">Properties</a>
+                <a href="#" class="nav-link">Agents</a>
+                <a href="#" class="nav-link">About</a>
+                <a href="#" class="nav-link">Contact</a>
+            </nav>
+            <div class="header-actions">
+                <button class="btn-icon" id="compareBtn" aria-label="Compare properties">
+                    <span class="compare-icon">⚖️</span>
+                    <span class="compare-count" id="compareCount">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">Find Your Dream Property</h1>
+            <p class="hero-subtitle">Explore our curated collection of premium real estate</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <!-- Filter Sidebar -->
+            <aside class="filter-sidebar" id="filterSidebar">
+                <div class="filter-header">
+                    <h2 class="filter-title">Filters</h2>
+                    <button class="btn-text" id="clearFilters">Clear All</button>
+                </div>
+
+                <!-- Search -->
+                <div class="filter-section">
+                    <label class="filter-label">Search</label>
+                    <div class="search-wrapper">
+                        <input type="text" class="filter-input search-input" id="searchInput"
+                            placeholder="Search properties...">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                </div>
+
+                <!-- Price Range -->
+                <div class="filter-section">
+                    <label class="filter-label">Price Range (LKR)</label>
+                    <div class="price-inputs">
+                        <input type="number" class="filter-input" id="minPrice" placeholder="Min">
+                        <span class="price-separator">—</span>
+                        <input type="number" class="filter-input" id="maxPrice" placeholder="Max">
+                    </div>
+                    <div class="price-range-slider">
+                        <input type="range" id="priceSlider" min="0" max="200000000" step="1000000" value="200000000">
+                        <div class="slider-labels">
+                            <span>0</span>
+                            <span>200M+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- City -->
+                <div class="filter-section">
+                    <label class="filter-label">Location</label>
+                    <select class="filter-select" id="cityFilter">
+                        <option value="">All Cities</option>
+                        <option value="Colombo">Colombo</option>
+                        <option value="Kandy">Kandy</option>
+                        <option value="Galle">Galle</option>
+                        <option value="Nuwara Eliya">Nuwara Eliya</option>
+                        <option value="Jaffna">Jaffna</option>
+                        <option value="Negombo">Negombo</option>
+                    </select>
+                </div>
+
+                <!-- Property Type -->
+                <div class="filter-section">
+                    <label class="filter-label">Property Type</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="propertyType" value="Villa">
+                            <span class="checkbox-custom"></span>
+                            <span>Villa</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="propertyType" value="Apartment">
+                            <span class="checkbox-custom"></span>
+                            <span>Apartment</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="propertyType" value="House">
+                            <span class="checkbox-custom"></span>
+                            <span>House</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="propertyType" value="Land">
+                            <span class="checkbox-custom"></span>
+                            <span>Land</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="propertyType" value="Commercial">
+                            <span class="checkbox-custom"></span>
+                            <span>Commercial</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Bedrooms -->
+                <div class="filter-section">
+                    <label class="filter-label">Bedrooms</label>
+                    <div class="bedroom-options">
+                        <button class="bedroom-btn" data-bedrooms="any">Any</button>
+                        <button class="bedroom-btn" data-bedrooms="1">1+</button>
+                        <button class="bedroom-btn" data-bedrooms="2">2+</button>
+                        <button class="bedroom-btn" data-bedrooms="3">3+</button>
+                        <button class="bedroom-btn" data-bedrooms="4">4+</button>
+                        <button class="bedroom-btn" data-bedrooms="5">5+</button>
+                    </div>
+                </div>
+
+                <!-- Bathrooms -->
+                <div class="filter-section">
+                    <label class="filter-label">Bathrooms</label>
+                    <div class="bedroom-options">
+                        <button class="bedroom-btn" data-bathrooms="any">Any</button>
+                        <button class="bedroom-btn" data-bathrooms="1">1+</button>
+                        <button class="bedroom-btn" data-bathrooms="2">2+</button>
+                        <button class="bedroom-btn" data-bathrooms="3">3+</button>
+                        <button class="bedroom-btn" data-bathrooms="4">4+</button>
+                    </div>
+                </div>
+
+                <!-- Amenities -->
+                <div class="filter-section">
+                    <label class="filter-label">Amenities</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="amenity" value="Pool">
+                            <span class="checkbox-custom"></span>
+                            <span>🏊 Pool</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="amenity" value="Parking">
+                            <span class="checkbox-custom"></span>
+                            <span>🚗 Parking</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="amenity" value="Garden">
+                            <span class="checkbox-custom"></span>
+                            <span>🌳 Garden</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="amenity" value="Gym">
+                            <span class="checkbox-custom"></span>
+                            <span>💪 Gym</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="checkbox-input" name="amenity" value="Security">
+                            <span class="checkbox-custom"></span>
+                            <span>🛡️ 24/7 Security</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sort -->
+                <div class="filter-section">
+                    <label class="filter-label">Sort By</label>
+                    <select class="filter-select" id="sortBy">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                    </select>
+                </div>
+            </aside>
+
+            <!-- Properties Grid -->
+            <div class="properties-section">
+                <!-- Filter Toggle (Mobile) -->
+                <div class="mobile-filter-toggle">
+                    <button class="btn-filter" id="toggleFilters">
+                        <span>🔧</span> Filters
+                    </button>
+                    <div class="results-count">
+                        <span id="resultsCount">0</span> properties found
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loading-state" id="loadingState">
+                    <div class="spinner-large"></div>
+                    <p>Loading properties...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state hidden" id="emptyState">
+                    <div class="empty-icon">🏚️</div>
+                    <h3>No properties found</h3>
+                    <p>Try adjusting your filters to see more results</p>
+                </div>
+
+                <!-- Properties Grid -->
+                <div class="properties-grid hidden" id="propertiesGrid">
+                    <!-- Properties will be dynamically loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Comparison Panel -->
+    <div class="comparison-panel hidden" id="comparisonPanel">
+        <div class="comparison-overlay" id="comparisonOverlay"></div>
+        <div class="comparison-content">
+            <div class="comparison-header">
+                <h2>Property Comparison</h2>
+                <button class="btn-close" id="closeComparison">✕</button>
+            </div>
+            <div class="comparison-body">
+                <div class="comparison-grid" id="comparisonGrid">
+                    <!-- Comparison cards will be added here -->
+                </div>
+                <div class="comparison-empty" id="comparisonEmpty">
+                    <div class="comparison-empty-icon">⚖️</div>
+                    <h3>Start Comparing Properties</h3>
+                    <p>Click on the "Compare" button on property cards to add them here (up to 3 properties)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Detail Modal -->
+    <div class="modal hidden" id="propertyModal">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">✕</button>
+            <div class="modal-body" id="modalBody">
+                <!-- Property details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast hidden" id="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Main App Script -->
+    <script src="properties-app.js"></script>
+</body>
+
+</html>

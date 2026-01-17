@@ -1,0 +1,432 @@
+---
+// Admin Panel - Astro Page with Client-Side Rendering
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Property Admin Panel - Supabase CMS</title>
+        <link rel="stylesheet" href="/admin/styles.css" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+
+    <body>
+        <div class="container">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <h1>🏠 Property Management CMS</h1>
+                    <p class="subtitle">Sri Lankan Real Estate Admin Panel</p>
+                </div>
+                <div class="header-actions">
+                    <button id="viewPropertiesBtn" class="btn-secondary"
+                        >View All Properties</button
+                    >
+                    <button
+                        id="logoutBtn"
+                        class="btn-secondary"
+                        style="margin-left: 10px;">Logout</button
+                    >
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Add Property Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Add New Property</h2>
+                        <p class="card-description">
+                            Fill in the details below to add a new property
+                            listing
+                        </p>
+                    </div>
+
+                    <form id="propertyForm" class="form">
+                        <!-- Title -->
+                        <div class="form-group">
+                            <label for="title" class="form-label">
+                                Property Title <span class="required">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                id="title"
+                                name="title"
+                                class="form-input"
+                                placeholder="e.g., Luxury Villa in Kandy"
+                                required
+                            />
+                        </div>
+
+                        <!-- Property Type & Listing Type Grid -->
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="property_type" class="form-label">
+                                    Property Type <span class="required">*</span>
+                                </label>
+                                <select
+                                    id="property_type"
+                                    name="property_type"
+                                    class="form-select"
+                                    required
+                                >
+                                    <option value="">Select type</option>
+                                    <option value="house">House</option>
+                                    <option value="apartment">Apartment</option>
+                                    <option value="land">Land</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="listing_type" class="form-label">
+                                    Listing Type <span class="required">*</span>
+                                </label>
+                                <select
+                                    id="listing_type"
+                                    name="listing_type"
+                                    class="form-select"
+                                    required
+                                >
+                                    <option value="">Select type</option>
+                                    <option value="sale">For Sale</option>
+                                    <option value="rent">For Rent</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Price & City Grid -->
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="price" class="form-label">
+                                    Price (LKR) <span class="required">*</span>
+                                </label>
+                                <input
+                                    type="number"
+                                    id="price"
+                                    name="price"
+                                    class="form-input"
+                                    placeholder="50000000"
+                                    required
+                                />
+                                <small class="form-hint"
+                                    >For rent, enter monthly rent amount</small
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="city" class="form-label">
+                                    City <span class="required">*</span>
+                                </label>
+                                <select
+                                    id="city"
+                                    name="city"
+                                    class="form-select"
+                                    required
+                                >
+                                    <option value="">Select a city</option>
+                                    <option value="Colombo">Colombo</option>
+                                    <option value="Kandy">Kandy</option>
+                                    <option value="Galle">Galle</option>
+                                    <option value="Nuwara Eliya"
+                                        >Nuwara Eliya</option
+                                    >
+                                    <option value="Jaffna">Jaffna</option>
+                                    <option value="Negombo">Negombo</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Property Details Grid -->
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="bedrooms" class="form-label">
+                                    Bedrooms
+                                </label>
+                                <input
+                                    type="number"
+                                    id="bedrooms"
+                                    name="bedrooms"
+                                    class="form-input"
+                                    placeholder="e.g., 4"
+                                    min="0"
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="bathrooms" class="form-label">
+                                    Bathrooms
+                                </label>
+                                <input
+                                    type="number"
+                                    id="bathrooms"
+                                    name="bathrooms"
+                                    class="form-input"
+                                    placeholder="e.g., 3"
+                                    min="0"
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="area_sqft" class="form-label">
+                                    Area (sq ft)
+                                </label>
+                                <input
+                                    type="number"
+                                    id="area_sqft"
+                                    name="area_sqft"
+                                    class="form-input"
+                                    placeholder="e.g., 3500"
+                                    min="0"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Features -->
+                        <div class="form-group">
+                            <label for="features" class="form-label">
+                                Features
+                            </label>
+                            <input
+                                type="text"
+                                id="features"
+                                name="features"
+                                class="form-input"
+                                placeholder="e.g., Pool, Garden, Parking, Security (comma-separated)"
+                            />
+                            <small class="form-hint"
+                                >Enter features separated by commas</small
+                            >
+                        </div>
+
+                        <!-- Featured Checkbox -->
+                        <div class="form-group">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    id="featured"
+                                    name="featured"
+                                    class="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
+                                />
+                                <span class="form-label">
+                                    Mark as Featured Property
+                                </span>
+                            </label>
+                            <small class="form-hint"
+                                >Featured properties appear on the homepage</small
+                            >
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group">
+                            <label for="description" class="form-label">
+                                Description
+                            </label>
+                            <textarea
+                                id="description"
+                                name="description"
+                                class="form-textarea"
+                                rows="5"
+                                placeholder="Detailed description of the property, amenities, location, etc."
+                            ></textarea>
+                        </div>
+
+                        <!-- YouTube URL -->
+                        <div class="form-group">
+                            <label for="youtube_url" class="form-label">
+                                YouTube Video URL
+                            </label>
+                            <input
+                                type="url"
+                                id="youtube_url"
+                                name="youtube_url"
+                                class="form-input"
+                                placeholder="https://www.youtube.com/watch?v=..."
+                            />
+                            <small class="form-hint"
+                                >Optional: Add a YouTube video tour of the
+                                property</small
+                            >
+                        </div>
+
+                        <!-- Facebook URL -->
+                        <div class="form-group">
+                            <label for="facebook_url" class="form-label">
+                                Facebook Post/Page URL
+                            </label>
+                            <input
+                                type="url"
+                                id="facebook_url"
+                                name="facebook_url"
+                                class="form-input"
+                                placeholder="https://www.facebook.com/..."
+                            />
+                            <small class="form-hint"
+                                >Optional: Link to Facebook post or page</small
+                            >
+                        </div>
+
+                        <!-- 360 View URL -->
+                        <div class="form-group">
+                            <label for="view_360_url" class="form-label">
+                                360° Virtual Tour URL
+                            </label>
+                            <input
+                                type="url"
+                                id="view_360_url"
+                                name="view_360_url"
+                                class="form-input"
+                                placeholder="https://..."
+                            />
+                            <small class="form-hint"
+                                >Optional: Add a 360° virtual tour link (e.g.,
+                                from Matterport, Kuula)</small
+                            >
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="form-group">
+                            <label for="image" class="form-label">
+                                Main Photo <span class="required">*</span>
+                            </label>
+                            <div class="file-input-wrapper">
+                                <input
+                                    type="file"
+                                    id="image"
+                                    name="image"
+                                    class="file-input"
+                                    accept="image/*"
+                                    required
+                                />
+                                <label for="image" class="file-input-label">
+                                    <span class="file-icon">📁</span>
+                                    <span id="fileName"
+                                        >Choose an image file</span
+                                    >
+                                </label>
+                            </div>
+                            <div id="imagePreview" class="image-preview hidden">
+                                <img id="previewImg" src="" alt="Preview" />
+                            </div>
+                        </div>
+
+                        <!-- Property Plan Upload -->
+                        <div class="form-group">
+                            <label for="property_plan" class="form-label">
+                                Property Floor Plan
+                            </label>
+                            <div class="file-input-wrapper">
+                                <input
+                                    type="file"
+                                    id="property_plan"
+                                    name="property_plan"
+                                    class="file-input"
+                                    accept="image/*,application/pdf"
+                                />
+                                <label
+                                    for="property_plan"
+                                    class="file-input-label"
+                                >
+                                    <span class="file-icon">📋</span>
+                                    <span id="planFileName"
+                                        >Choose floor plan (image or PDF)</span
+                                    >
+                                </label>
+                            </div>
+                            <div id="planPreview" class="image-preview hidden">
+                                <img
+                                    id="previewPlan"
+                                    src=""
+                                    alt="Floor Plan Preview"
+                                />
+                            </div>
+                            <small class="form-hint"
+                                >Optional: Upload property floor plan or layout</small
+                            >
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="form-actions">
+                            <button
+                                type="submit"
+                                id="submitBtn"
+                                class="btn-primary"
+                            >
+                                <span id="submitText">Save Property</span>
+                                <span id="loadingSpinner" class="spinner hidden"
+                                ></span>
+                            </button>
+                            <button
+                                type="button"
+                                id="cancelEditBtn"
+                                class="btn-secondary"
+                                style="display: none;"
+                            >
+                                Cancel Edit
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Properties List -->
+                <div class="card" id="propertiesList">
+                    <div class="card-header">
+                        <h2>All Properties</h2>
+                        <button
+                            id="hidePropertiesBtn"
+                            class="btn-secondary-small">Hide List</button
+                        >
+                    </div>
+                    <div id="propertiesContainer" class="properties-grid">
+                        <!-- Properties will be loaded here -->
+                    </div>
+                </div>
+            </main>
+
+            <!-- Toast Notification -->
+            <div id="toast" class="toast hidden">
+                <span id="toastMessage"></span>
+            </div>
+
+            <!-- Setup Instructions (shown if not configured) -->
+            <div id="setupModal" class="modal hidden">
+                <div class="modal-content">
+                    <h2>⚙️ Supabase Setup Required</h2>
+                    <p>
+                        Please configure your Supabase credentials in <code
+                            >config.js</code
+                        >
+                    </p>
+                    <ol class="setup-instructions">
+                        <li>
+                            Go to your <a
+                                href="https://supabase.com/dashboard"
+                                target="_blank">Supabase Dashboard</a
+                            >
+                        </li>
+                        <li>
+                            Copy your Project URL and Anon Key from Settings →
+                            API
+                        </li>
+                        <li>Update the <code>config.js</code> file</li>
+                        <li>
+                            Create the <code>properties</code> table and <code
+                                >property-images</code
+                            > storage bucket
+                        </li>
+                    </ol>
+                    <button onclick="closeSetupModal()" class="btn-primary"
+                        >Got it!</button
+                    >
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin App Script -->
+        <script src="../scripts/admin.ts"></script>
+    </body>
+</html>

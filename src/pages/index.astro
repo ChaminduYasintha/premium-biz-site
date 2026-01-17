@@ -1,342 +1,795 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { fetchProducts, fetchServices, fetchTestimonials, fetchContentByType, getOptimizedImage, generateSlug, type SheetItem, type Service, type Testimonial } from '../utils/sheet';
-import { APP_CONFIG } from '../config';
+import Layout from "../layouts/Layout.astro";
 
-const { whatsappNumber } = APP_CONFIG.contact;
-const { cloudinaryCloudName } = APP_CONFIG.images;
-const WHATSAPP_NUMBER = whatsappNumber;
-const CLOUDINARY_CLOUD_NAME = cloudinaryCloudName;
-
-const CONTENT_CSV_URL = import.meta.env.PUBLIC_CONTENT_CSV_URL || "";
-const SHEET_CSV_URL = import.meta.env.PUBLIC_SHEET_CSV_URL || "";
-const SERVICES_CSV_URL = import.meta.env.PUBLIC_SERVICES_CSV_URL || "";
-const TESTIMONIALS_CSV_URL = import.meta.env.PUBLIC_TESTIMONIALS_CSV_URL || "";
-
-let items: SheetItem[] = [];
-let services: Service[] = [];
-let testimonials: Testimonial[] = [];
-
-const SHEET_BASE_URL = import.meta.env.PUBLIC_SHEET_CSV_URL || "";
-
-// Standard Google Sheets GIDs for first 4 tabs (usually 0, but often sequential or specific)
-// Ideally, the user provides specific URLs, but we can try to "guess" or append if they provided a base sheet URL
-const PRODUCTS_GID = "0";      // First tab
-const SERVICES_GID = "111111"; // Placeholder - user needs to provide exact GIDs or separate URLs
-const TESTIMONIALS_GID = "222222"; 
-
-// Helper to append GID if not present
-const getSheetUrl = (baseUrl: string, gid: string) => {
-  if (!baseUrl) return "";
-  if (baseUrl.includes("gid=")) return baseUrl; // Already has a GID, use as is
-  return `${baseUrl}&gid=${gid}`;
-}
-
-if (CONTENT_CSV_URL) {
-  console.log(' Using Universal CSV:', CONTENT_CSV_URL);
-  items = await fetchContentByType(CONTENT_CSV_URL, 'product') as SheetItem[];
-  services = await fetchContentByType(CONTENT_CSV_URL, 'service') as Service[];
-  testimonials = await fetchContentByType(CONTENT_CSV_URL, 'testimonial') as Testimonial[];
-} else {
-  console.log(' Using Separate CSVs logic');
-  
-  // If we only have ONE main sheet URL in PUBLIC_SHEET_CSV_URL, we might need to use it for all
-  // But Google Sheets exports specific tabs via "gid". 
-  // If the user provided a URL ending in output=csv without gid, it defaults to the first tab (gid=0).
-  
-  // 1. Products (First tab / default)
-  const productsUrl = SHEET_CSV_URL || getSheetUrl(SHEET_CSV_URL, PRODUCTS_GID);
-  if (productsUrl) {
-      console.log(' Fetching Products from:', productsUrl);
-      items = await fetchProducts(productsUrl);
-  }
-
-  // 2. Services (Try to get from specific env var OR separate tab if we knew the GID)
-  // Since we don't know the exact GID for services/testimonials, we rely on the specific ENV vars
-  // OR we try to fetch from the main sheet if items are empty (assuming universal structure?)
-  // For now, respect the separate variables strictly as per original design.
-  
-  if (SERVICES_CSV_URL) {
-      services = await fetchServices(SERVICES_CSV_URL);
-  } else if (SHEET_CSV_URL && services.length === 0) {
-     // Fallback: Check if the main sheet actually has "type" column? 
-     // We can try to fetch the main sheet as "ContentByType" essentially treating it as a universal sheet
-     // This handles the case where the user put the universal sheet URL into PUBLIC_SHEET_CSV_URL
-     console.log(' Checking if main sheet behaves as Universal Sheet...');
-     const potentialServices = await fetchContentByType(SHEET_CSV_URL, 'service') as Service[];
-     if (potentialServices.length > 0) {
-         console.log(' Found services in main sheet!');
-         services = potentialServices;
-         // If we found services, likely products and testimonials are there too
-         if (items.length === 0) items = await fetchContentByType(SHEET_CSV_URL, 'product') as SheetItem[];
-         testimonials = await fetchContentByType(SHEET_CSV_URL, 'testimonial') as Testimonial[];
-     }
-  }
-
-  if (TESTIMONIALS_CSV_URL) testimonials = await fetchTestimonials(TESTIMONIALS_CSV_URL);
-}
-
-console.log(`Fetched ${items.length} products, ${services.length} services, ${testimonials.length} testimonials.`);
-
+const WHATSAPP_NUMBER =
+  import.meta.env.PUBLIC_WHATSAPP_NUMBER || "+94771234567";
+const BUSINESS_NAME =
+  import.meta.env.PUBLIC_BUSINESS_NAME || "Premium Estates Lanka";
 ---
 
-<Layout title="Welcome">
-  <!-- ============================================ -->
-  <!-- HERO SECTION -->
-  <!-- ============================================ -->
-  <section class="relative overflow-hidden bg-stone-50 pt-16 pb-24 md:pt-24 md:pb-32">
-    <!-- Background blobs -->
-    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-amber-200/30 rounded-full blur-3xl animate-pulse"></div>
-    <div class="absolute bottom-0 left-0 -ml-24 -mb-24 w-80 h-80 bg-orange-200/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
+<Layout title="Find Your Dream Property in Sri Lanka">
+  <!-- Floating WhatsApp Button -->
+  <a
+    href={`https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hi! I'm interested in your properties")}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="whatsapp-float"
+    aria-label="Contact us on WhatsApp"
+  >
+    <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
+      ></path>
+    </svg>
+  </a>
 
-    <div class="container mx-auto px-4 relative">
-      <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-        
-        <!-- Content -->
-        <div class="text-center lg:text-left space-y-8">
-          <div class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold mb-4">
-             <span class="w-2 h-2 bg-amber-600 rounded-full animate-pulse"></span>
-             Premium Quality, Island-wide Delivery
+  <!-- Hero Section -->
+  <section
+    class="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-slate-50 via-white to-amber-50/30"
+  >
+    <div class="container mx-auto px-4 py-20 relative z-10">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div class="space-y-8">
+          <div class="inline-block">
+            <span
+              class="px-4 py-2 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold"
+            >
+              🏡 Premium Properties Island-Wide
+            </span>
           </div>
-          <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight text-stone-900">
-            Elevate Your <br/>
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">
-              Lifestyle
+
+          <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+            Your Dream Property
+            <span
+              class="block text-transparent bg-clip-text bg-gradient-to-r from-amber-600 via-orange-500 to-amber-600"
+            >
+              Starts Here
             </span>
           </h1>
-          <p class="text-lg md:text-xl text-stone-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-            Discover our curated collection of high-quality products. We bring the best of the world directly to your doorstep.
+
+          <p
+            class="text-lg md:text-xl text-slate-600 max-w-2xl leading-relaxed"
+          >
+            Discover exceptional properties across Sri Lanka. From luxury villas
+            to modern apartments—find your perfect space today.
           </p>
 
-          <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start pt-4">
-            <a 
-              href="#products" 
-              class="inline-flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-8 py-4 rounded-full font-semibold shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
-            >
-              Browse Shop
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+          <div class="flex flex-wrap gap-4 pt-4">
+            <a href="/properties" class="btn-primary">
+              <span>Explore Properties</span>
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+              </svg>
             </a>
-            <a 
-              href="#services" 
-              class="inline-flex items-center justify-center gap-2 bg-white text-stone-900 border border-stone-200 hover:border-amber-500 hover:text-amber-600 px-8 py-4 rounded-full font-semibold shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300"
-            >
-              Our Services
-            </a>
+            <a href="#about" class="btn-secondary"> Learn More </a>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-3 gap-8 pt-8 border-t border-slate-200">
+            <div>
+              <p id="property-count" class="text-3xl font-bold text-slate-900">
+                ---
+              </p>
+              <p class="text-sm text-slate-500">Properties</p>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-slate-900">24/7</p>
+              <p class="text-sm text-slate-500">Support</p>
+            </div>
+            <div>
+              <p class="text-3xl font-bold text-slate-900">100%</p>
+              <p class="text-sm text-slate-500">Verified</p>
+            </div>
           </div>
         </div>
 
         <!-- Hero Image -->
-        <div class="relative max-w-lg mx-auto lg:max-w-none">
-          <div class="relative rounded-3xl overflow-hidden shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500 border-4 border-white">
-            <img 
-              src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?q=80&w=2070&auto=format&fit=crop"
-              alt="Premium Lifestyle"
-              class="w-full h-auto object-cover aspect-square"
+        <div class="relative">
+          <div class="aspect-square rounded-3xl overflow-hidden shadow-2xl">
+            <img
+              src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"
+              alt="Luxury Property"
+              class="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
               loading="eager"
             />
           </div>
-          <!-- Floating badge -->
-          <div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-4 animate-bounce hover:animate-none">
-             <div class="bg-green-100 p-3 rounded-full text-green-600">
-               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-             </div>
-             <div>
-               <p class="text-sm text-stone-500 font-medium">Customer Review</p>
-               <p class="text-stone-900 font-bold">4.9/5 "Excellent"</p>
-             </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Properties Section -->
+  <section id="properties-section" class="py-20 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+          Featured <span
+            class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600"
+            >Properties</span
+          >
+        </h2>
+        <p class="text-slate-600">
+          Handpicked premium properties from our exclusive collection
+        </p>
+      </div>
+
+      <!-- Loading State -->
+      <div id="properties-loading" class="text-center py-20">
+        <div
+          class="inline-block w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin"
+        >
+        </div>
+        <p class="text-slate-600 mt-4">Loading properties...</p>
+      </div>
+
+      <!-- Properties Grid -->
+      <div
+        id="properties-grid"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        style="display: none;"
+      >
+        <!-- Properties loaded by JavaScript -->
+      </div>
+
+      <!-- Empty State -->
+      <div
+        id="properties-empty"
+        class="text-center py-20 bg-slate-50 rounded-3xl"
+        style="display: none;"
+      >
+        <p class="text-slate-600 mb-2">No featured properties available yet</p>
+        <p class="text-sm text-slate-500 mb-6">Mark properties as "Featured" in the admin panel to display them here</p>
+        <a href="/admin" class="btn-primary"> Go to Admin Panel </a>
+      </div>
+
+      <!-- View All Button -->
+      <div
+        id="view-all-section"
+        class="text-center mt-12"
+        style="display: none;"
+      >
+        <a href="/properties" class="btn-secondary"> View All Properties </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Us Section -->
+  <section
+    id="about"
+    class="py-20 bg-gradient-to-br from-slate-50 to-amber-50/30"
+  >
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-16">
+          <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            About <span
+              class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600"
+              >Us</span
+            >
+          </h2>
+          <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+            Your trusted partner in finding the perfect property across Sri Lanka
+          </p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-12 items-center mb-16">
+          <div>
+            <h3 class="text-2xl font-bold text-slate-900 mb-4">
+              Your Local Real Estate Experts
+            </h3>
+            <p class="text-slate-600 mb-4 leading-relaxed">
+              With deep roots in Sri Lanka's real estate market, we understand
+              the unique needs of local buyers and investors. Our team combines
+              local knowledge with modern technology to deliver exceptional
+              service.
+            </p>
+            <p class="text-slate-600 mb-4 leading-relaxed">
+              Whether you're looking for a family home in Colombo, a beachfront
+              villa in Galle, or an investment property in Kandy, we're here to
+              guide you every step of the way.
+            </p>
+            <div class="flex flex-wrap gap-4 mt-6">
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-5 h-5 text-amber-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <span class="text-slate-700 font-medium">Local Expertise</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-5 h-5 text-amber-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <span class="text-slate-700 font-medium">Trusted Service</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg
+                  class="w-5 h-5 text-amber-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+                <span class="text-slate-700 font-medium">Verified Properties</span>
+              </div>
+            </div>
+          </div>
+          <div class="relative">
+            <div class="aspect-square rounded-3xl overflow-hidden shadow-2xl">
+              <img
+                src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80"
+                alt="Sri Lankan Property"
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
           </div>
         </div>
 
-      </div>
-    </div>
-  </section>
+        <!-- Why Choose Us -->
+        <div class="text-center mb-12">
+          <h3 class="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
+            Why Choose Us?
+          </h3>
+        </div>
 
-  <!-- ============================================ -->
-  <!-- SERVICES SUMMARY -->
-  <!-- ============================================ -->
-  <section id="services" class="py-20 bg-white">
-    <div class="container mx-auto px-4">
-      <div class="text-center max-w-3xl mx-auto mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4">Why Choose Us?</h2>
-        <p class="text-stone-600">We go beyond just selling products. We provide a complete premium experience.</p>
-      </div>
-
-      <div class="grid md:grid-cols-3 gap-8">
-        {services.slice(0, 3).map((service) => (
-          <div class="bg-stone-50 rounded-2xl p-8 hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-amber-100 group">
-             <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-               <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={service.icon} />
-               </svg>
-             </div>
-             <h3 class="text-xl font-bold text-stone-900 mb-3">{service.title}</h3>
-             <p class="text-stone-600 leading-relaxed mb-4">{service.description}</p>
-             <a href="/services" class="text-amber-600 font-medium hover:text-amber-700 inline-flex items-center gap-1 group/link">
-               Learn more <span class="group-hover/link:translate-x-1 transition-transform">&rarr;</span>
-             </a>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================ -->
-  <!-- PRODUCTS GRID -->
-  <!-- ============================================ -->
-  <section id="products" class="py-20 bg-stone-50">
-    <div class="container mx-auto px-4">
-      <div class="text-center max-w-3xl mx-auto mb-16">
-         <span class="text-amber-600 font-semibold tracking-wider uppercase text-sm">New Arrivals</span>
-         <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mt-2 mb-4">Latest Products</h2>
-         <p class="text-stone-600">Hand-picked collection just for you.</p>
-      </div>
-
-      {items.length > 0 ? (
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {items.map((item) => {
-               const slug = item.id || generateSlug(item.name || "product");
-               return (
-                <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-stone-100">
-                  <!-- Product Image -->
-                  <a href={`/product/${slug}`} class="block relative overflow-hidden aspect-[4/5] bg-stone-100">
-                    <img 
-                      src={getOptimizedImage(item.imageUrl || "", CLOUDINARY_CLOUD_NAME)}
-                      alt={item.name || "Product"}
-                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      loading="lazy"
-                    />
-                    {item.category && (
-                      <div class="absolute top-3 left-3 bg-white/90 backdrop-blur text-stone-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
-                        {item.category}
-                      </div>
-                    )}
-                    <!-- Overlay View Button -->
-                    <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                       <span class="bg-white text-stone-900 px-6 py-2 rounded-full font-medium shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">View Details</span>
-                    </div>
-                  </a>
-
-                  <!-- Product Details -->
-                  <div class="p-5">
-                    <h3 class="font-bold text-stone-900 group-hover:text-amber-600 transition-colors line-clamp-1 mb-1">
-                      <a href={`/product/${slug}`}>{item.name || "Product Name"}</a>
-                    </h3>
-                    
-                    <div class="flex items-center justify-between mt-3">
-                      {item.price && (
-                        <div class="text-lg font-bold text-stone-800">
-                          Rs. {item.price}
-                        </div>
-                      )}
-                      
-                      <button 
-                        class="text-amber-600 hover:bg-amber-50 p-2 rounded-full transition-colors"
-                        title="Add to Wishlist"
-                      >
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div class="text-center py-20 bg-white rounded-3xl border border-dashed border-stone-200">
-            <div class="inline-block p-6 bg-stone-50 rounded-full mb-4">
-              <svg class="w-12 h-12 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                class="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
             </div>
-            <h3 class="text-xl font-bold text-stone-800 mb-2">No Products Found</h3>
-            <p class="text-stone-500 max-w-sm mx-auto mb-6">
-              Connect your Google Sheet CSV to populate this section with your products.
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              Verified Listings
+            </h3>
+            <p class="text-slate-600">
+              All properties are thoroughly verified for authenticity. We ensure
+              only genuine opportunities reach you.
             </p>
-             <a 
-                href={`https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("I need help setting up the website.")}`}
-                target="_blank"
-                class="inline-flex items-center gap-2 text-green-600 font-semibold hover:underline"
-              >
-                Contact Support
-              </a>
           </div>
-        )}
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                class="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                ></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">Expert Guidance</h3>
+            <p class="text-slate-600">
+              Our experienced team provides professional advice throughout your
+              property journey, from search to settlement.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                class="w-8 h-8"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900 mb-3">Quick Support</h3>
+            <p class="text-slate-600">
+              Fast response times with dedicated 24/7 support via WhatsApp. We're
+              always here when you need us.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- ============================================ -->
-  <!-- PROPERTIES SECTION (CLIENT-SIDE RENDERED) -->
-  <!-- ============================================ -->
-  <section id="properties-section" class="py-20 bg-gradient-to-br from-amber-50 via-white to-orange-50 relative overflow-hidden" style="display: none;">
-    <!-- Decorative background elements -->
-    <div class="absolute top-0 left-1/4 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-0 right-1/4 w-80 h-80 bg-orange-200/20 rounded-full blur-3xl"></div>
-    
-    <div class="container mx-auto px-4 relative z-10">
+  <!-- Testimonials Section -->
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-4">
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <span class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 rounded-full text-sm font-semibold mb-4">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-          Real Estate
-        </span>
-        <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mt-2 mb-4">
-          Featured <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600">Properties</span>
+        <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+          What Our <span
+            class="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600"
+            >Clients Say</span
+          >
         </h2>
-        <p class="text-stone-600">Discover your dream property from our exclusive collection.</p>
+        <p class="text-slate-600">
+          Real experiences from satisfied property buyers and investors across
+          Sri Lanka
+        </p>
       </div>
 
-      <!-- Properties Grid (populated by JavaScript) -->
-      <div id="properties-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Properties will be loaded here by properties-component.js -->
-      </div>
+      <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <!-- Testimonial 1 -->
+        <div class="testimonial-card">
+          <div class="flex items-center gap-1 mb-4">
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
+          <p class="text-slate-600 mb-6 leading-relaxed">
+            "Found our dream home in Colombo through this platform. The team was
+            incredibly helpful and made the entire process smooth. Highly
+            recommend for anyone looking to buy property in Sri Lanka!"
+          </p>
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
+              RK
+            </div>
+            <div>
+              <p class="font-bold text-slate-900">Ravi Kumar</p>
+              <p class="text-sm text-slate-500">Property Buyer, Colombo</p>
+            </div>
+          </div>
+        </div>
 
-      <!-- View All Properties Button -->
-      <div class="text-center mt-12">
-        <a 
-          href="#properties"
-          class="inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-8 py-4 rounded-full font-semibold shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+        <!-- Testimonial 2 -->
+        <div class="testimonial-card">
+          <div class="flex items-center gap-1 mb-4">
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
+          <p class="text-slate-600 mb-6 leading-relaxed">
+            "As an investor, I appreciate the detailed property information and
+            virtual tours. The 360° views helped me make an informed decision
+            without traveling. Excellent service!"
+          </p>
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
+              SP
+            </div>
+            <div>
+              <p class="font-bold text-slate-900">Samantha Perera</p>
+              <p class="text-sm text-slate-500">Property Investor, Kandy</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="testimonial-card">
+          <div class="flex items-center gap-1 mb-4">
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            <svg
+              class="w-5 h-5 text-amber-500"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
+          <p class="text-slate-600 mb-6 leading-relaxed">
+            "The WhatsApp support is fantastic! Quick responses and helpful
+            guidance. Found a beautiful beachfront property in Galle. Thank you
+            for making our property search so easy!"
+          </p>
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-bold text-lg">
+              DN
+            </div>
+            <div>
+              <p class="font-bold text-slate-900">Dinesh Nimal</p>
+              <p class="text-sm text-slate-500">Property Buyer, Galle</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="py-20 bg-gradient-to-r from-amber-600 to-orange-600">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl mx-auto text-center text-white">
+        <h2 class="text-3xl md:text-5xl font-bold mb-6">
+          Ready to Find Your Dream Property?
+        </h2>
+        <p class="text-xl mb-8 text-amber-50">
+          Get in touch today and let's make your real estate dreams come true
+        </p>
+        <a
+          href={`https://wa.me/${WHATSAPP_NUMBER.replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hi! I'm interested in your property listings")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-3 bg-white text-amber-600 px-10 py-5 rounded-full font-bold text-lg shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all duration-300"
         >
-          View All Properties
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"
+            ></path>
           </svg>
+          Chat with Us on WhatsApp
         </a>
       </div>
     </div>
   </section>
 
-  <!-- ============================================ -->
-  <!-- TESTIMONIALS SECTION -->
-  <!-- ============================================ -->
-  <section class="py-20 bg-white overflow-hidden">
-    <div class="container mx-auto px-4">
-      <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-4xl font-bold text-stone-900 mb-4">Client Stories</h2>
-        <p class="text-stone-600">Don't just take our word for it.</p>
-      </div>
+  <!-- Custom Styles -->
+  <style>
+    .whatsapp-float {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 64px;
+      height: 64px;
+      background: #25d366;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 24px rgba(37, 211, 102, 0.5);
+      z-index: 9999;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
 
-      <div class="grid md:grid-cols-3 gap-8">
-        {testimonials.map((testimonial) => (
-          <div class="bg-stone-50 p-8 rounded-2xl relative">
-            <!-- Quote Icon -->
-            <div class="absolute top-6 right-6 text-amber-200">
-              <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C19.5693 16 20.017 15.5523 20.017 15V9C20.017 8.44772 19.5693 8 19.017 8H15.017C14.4647 8 14.017 8.44772 14.017 9V11C14.017 11.5523 13.5693 12 13.017 12H12.017V5H22.017V15C22.017 18.3137 19.3307 21 16.017 21H14.017ZM5.0166 21L5.0166 18C5.0166 16.8954 5.91203 16 7.0166 16H10.0166C10.5689 16 11.0166 15.5523 11.0166 15V9C11.0166 8.44772 10.5689 8 10.0166 8H6.0166C5.46432 8 5.0166 8.44772 5.0166 9V11C5.0166 11.5523 4.56889 12 4.0166 12H3.0166V5H13.0166V15C13.0166 18.3137 10.3303 21 7.0166 21H5.0166Z"></path></svg>
-            </div>
-            
-            <p class="text-stone-700 italic mb-6 relative z-10 leading-relaxed">"{testimonial.content}"</p>
-            
-            <div class="flex items-center gap-4">
-              <img src={getOptimizedImage(testimonial.avatarUrl || "", CLOUDINARY_CLOUD_NAME)} alt={testimonial.name} class="w-12 h-12 rounded-full object-cover" />
-              <div>
-                <h4 class="font-bold text-stone-900 text-sm">{testimonial.name}</h4>
-                <p class="text-stone-500 text-xs">{testimonial.role}</p>
+    .whatsapp-float:hover {
+      transform: scale(1.15);
+      box-shadow: 0 12px 32px rgba(37, 211, 102, 0.7);
+    }
+
+    .whatsapp-float svg {
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+      color: white;
+      fill: white;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px -5px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: white;
+      color: #0f172a;
+      border: 2px solid #e2e8f0;
+      padding: 1rem 2rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      border-color: #f59e0b;
+      color: #f59e0b;
+      transform: translateY(-2px);
+    }
+
+    .feature-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-icon {
+      width: 4rem;
+      height: 4rem;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      margin-bottom: 1.5rem;
+    }
+
+    .testimonial-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      border: 1px solid #f1f5f9;
+    }
+
+    .testimonial-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Property Card Hover Effects */
+    .property-card {
+      transition: all 0.3s ease;
+    }
+
+    .property-card:hover {
+      transform: translateY(-4px);
+    }
+
+    /* Responsive WhatsApp Button */
+    @media (max-width: 768px) {
+      .whatsapp-float {
+        bottom: 20px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+      }
+    }
+  </style>
+
+  <!-- Load Properties Script -->
+  <script>
+    async function loadProperties() {
+      const propertiesGrid = document.getElementById("properties-grid");
+      const loading = document.getElementById("properties-loading");
+      const empty = document.getElementById("properties-empty");
+      const viewAllSection = document.getElementById("view-all-section");
+      const propertyCount = document.getElementById("property-count");
+
+      try {
+        if (!window.ENV?.SUPABASE_URL || !window.ENV?.SUPABASE_ANON_KEY) {
+          console.log("Supabase not configured");
+          if (loading) loading.style.display = "none";
+          if (empty) empty.style.display = "block";
+          return;
+        }
+
+        const { createClient } = window.supabase;
+        const supabase = createClient(
+          window.ENV.SUPABASE_URL,
+          window.ENV.SUPABASE_ANON_KEY,
+        );
+
+        const { data, error } = await supabase
+          .from("properties")
+          .select("*")
+          .eq("featured", true)
+          .order("created_at", { ascending: false })
+          .limit(6);
+
+        if (error) throw error;
+
+        if (loading) loading.style.display = "none";
+
+        if (data && data.length > 0) {
+          if (propertyCount) {
+            propertyCount.textContent = data.length + "+";
+          }
+
+          if (propertiesGrid) {
+            propertiesGrid.innerHTML = data
+              .map(
+                (property) => `
+              <div class="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300">
+                <div class="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                  <img 
+                    src="${property.image_url}" 
+                    alt="${property.title}"
+                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    loading="lazy"
+                  />
+                  <div class="absolute top-4 left-4">
+                    <span class="bg-amber-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                      ${property.city}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="p-6">
+                  <h3 class="font-bold text-xl text-slate-900 mb-2 line-clamp-1">
+                    ${property.title}
+                  </h3>
+                  
+                  <p class="text-slate-600 text-sm mb-4 line-clamp-2">
+                    ${property.description || "Premium property available"}
+                  </p>
+                  
+                  <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <div class="text-2xl font-bold text-amber-600">
+                      LKR ${formatPrice(property.price)}
+                    </div>
+                    <a 
+                      href="/property/${property.id}"
+                      class="text-amber-600 hover:text-amber-700 font-medium inline-flex items-center gap-1 group/link"
+                    >
+                      View Details
+                      <svg class="w-4 h-4 group-hover/link:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                      </svg>
+                    </a>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
+            `,
+              )
+              .join("");
+            propertiesGrid.style.display = "grid";
+          }
 
+          if (viewAllSection) viewAllSection.style.display = "block";
+        } else {
+          if (empty) empty.style.display = "block";
+        }
+      } catch (error) {
+        console.error("Error loading properties:", error);
+        if (loading) loading.style.display = "none";
+        if (empty) empty.style.display = "block";
+      }
+    }
+
+    function formatPrice(price) {
+      if (price >= 10000000) {
+        return (price / 10000000).toFixed(1) + "M";
+      } else if (price >= 100000) {
+        return (price / 100000).toFixed(1) + "L";
+      } else {
+        return price.toLocaleString("en-US");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadProperties);
+  </script>
 </Layout>

@@ -1,0 +1,1147 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+// Get query parameters for filtering (e.g., ?type=sale)
+const url = Astro.url;
+const propertyType = url.searchParams.get("type"); // 'sale' or 'rent'
+
+const pageTitle =
+    propertyType === "sale"
+        ? "Properties for Sale"
+        : propertyType === "rent"
+          ? "Properties for Rent"
+          : "All Properties";
+---
+
+<Layout title={pageTitle}>
+    <!-- Properties Listing Page -->
+    <div class="min-h-screen bg-stone-50">
+        <!-- Hero Section -->
+        <section class="bg-gradient-to-r from-amber-600 to-orange-600 py-16">
+            <div class="container mx-auto px-4">
+                <div class="max-w-4xl mx-auto text-center text-white">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                        {pageTitle}
+                    </h1>
+                    <p class="text-xl text-amber-50">
+                        {
+                            propertyType === "sale"
+                                ? "Find your dream property to buy in Sri Lanka"
+                                : propertyType === "rent"
+                                  ? "Discover rental properties across Sri Lanka"
+                                  : "Browse our complete collection of properties"
+                        }
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <div class="container mx-auto px-4 py-12">
+            <div class="grid lg:grid-cols-4 gap-8">
+                <!-- Filter Sidebar -->
+                <aside class="lg:col-span-1">
+                    <div
+                        class="bg-white rounded-2xl p-6 shadow-lg sticky top-24"
+                    >
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-xl font-bold text-stone-900">
+                                Filters
+                            </h2>
+                            <button
+                                id="clearFilters"
+                                class="text-amber-600 text-sm font-medium hover:text-amber-700"
+                            >
+                                Clear All
+                            </button>
+                        </div>
+
+                        <!-- Search -->
+                        <div class="mb-6">
+                            <label
+                                class="block text-sm font-semibold text-stone-700 mb-2"
+                                >Search</label
+                            >
+                            <input
+                                type="text"
+                                id="searchInput"
+                                placeholder="Search properties..."
+                                class="w-full px-4 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none"
+                            />
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="mb-6">
+                            <label
+                                class="block text-sm font-semibold text-stone-700 mb-2"
+                                >Price Range (LKR)</label
+                            >
+                            <div class="grid grid-cols-2 gap-3">
+                                <input
+                                    type="number"
+                                    id="minPrice"
+                                    placeholder="Min"
+                                    class="px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none text-sm"
+                                />
+                                <input
+                                    type="number"
+                                    id="maxPrice"
+                                    placeholder="Max"
+                                    class="px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Property Type -->
+                        <div class="mb-6">
+                            <label
+                                class="block text-sm font-semibold text-stone-700 mb-2"
+                                >Property Type</label
+                            >
+                            <select
+                                id="propertyTypeFilter"
+                                class="w-full px-4 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none"
+                            >
+                                <option value="">All Types</option>
+                                <option value="house">House</option>
+                                <option value="apartment">Apartment</option>
+                                <option value="land">Land</option>
+                            </select>
+                        </div>
+
+                        <!-- Listing Type -->
+                        <div class="mb-6">
+                            <label
+                                class="block text-sm font-semibold text-stone-700 mb-2"
+                                >Listing Type</label
+                            >
+                            <select
+                                id="listingTypeFilter"
+                                class="w-full px-4 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none"
+                            >
+                                <option value="">All</option>
+                                <option value="sale">For Sale</option>
+                                <option value="rent">For Rent</option>
+                            </select>
+                        </div>
+
+                        <!-- City -->
+                        <div class="mb-6">
+                            <label
+                                class="block text-sm font-semibold text-stone-700 mb-2"
+                                >Location</label
+                            >
+                            <select
+                                id="cityFilter"
+                                class="w-full px-4 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none"
+                            >
+                                <option value="">All Cities</option>
+                                <option value="Colombo">Colombo</option>
+                                <option value="Kandy">Kandy</option>
+                                <option value="Galle">Galle</option>
+                                <option value="Nuwara Eliya"
+                                    >Nuwara Eliya</option
+                                >
+                                <option value="Jaffna">Jaffna</option>
+                                <option value="Negombo">Negombo</option>
+                            </select>
+                        </div>
+
+                        <!-- Bedrooms -->
+                        <div class="mb-6">
+                            <label
+                                class="block text-sm font-semibold text-stone-700 mb-2"
+                                >Bedrooms</label
+                            >
+                            <select
+                                id="bedroomsFilter"
+                                class="w-full px-4 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none"
+                            >
+                                <option value="">Any</option>
+                                <option value="1">1+</option>
+                                <option value="2">2+</option>
+                                <option value="3">3+</option>
+                                <option value="4">4+</option>
+                                <option value="5">5+</option>
+                            </select>
+                        </div>
+
+                        <!-- Bathrooms -->
+                        <div class="mb-6">
+                            <label
+                                class="block text-sm font-semibold text-stone-700 mb-2"
+                                >Bathrooms</label
+                            >
+                            <select
+                                id="bathroomsFilter"
+                                class="w-full px-4 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none"
+                            >
+                                <option value="">Any</option>
+                                <option value="1">1+</option>
+                                <option value="2">2+</option>
+                                <option value="3">3+</option>
+                                <option value="4">4+</option>
+                            </select>
+                        </div>
+
+                        <!-- Area Range -->
+                        <div class="mb-6">
+                            <label
+                                class="block text-sm font-semibold text-stone-700 mb-2"
+                                >Area (sq ft)</label
+                            >
+                            <div class="grid grid-cols-2 gap-3">
+                                <input
+                                    type="number"
+                                    id="minArea"
+                                    placeholder="Min"
+                                    class="px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none text-sm"
+                                />
+                                <input
+                                    type="number"
+                                    id="maxArea"
+                                    placeholder="Max"
+                                    class="px-3 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <!-- Featured Only -->
+                        <div class="mb-6">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    id="featuredFilter"
+                                    class="w-5 h-5 text-amber-600 border-stone-300 rounded focus:ring-amber-500"
+                                />
+                                <span class="text-sm font-semibold text-stone-700">
+                                    Featured Properties Only
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- Sort -->
+                        <div class="mb-6">
+                            <label
+                                class="block text-sm font-semibold text-stone-700 mb-2"
+                                >Sort By</label
+                            >
+                            <select
+                                id="sortBy"
+                                class="w-full px-4 py-2 border-2 border-stone-200 rounded-lg focus:border-amber-500 focus:outline-none"
+                            >
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="price-low"
+                                    >Price: Low to High</option
+                                >
+                                <option value="price-high"
+                                    >Price: High to Low</option
+                                >
+                            </select>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Properties Grid -->
+                <div class="lg:col-span-3">
+                    <!-- Results Header -->
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="text-stone-700">
+                            <span id="resultsCount" class="font-bold text-xl"
+                                >0</span
+                            >
+                            <span class="text-stone-600">
+                                properties found</span
+                            >
+                        </div>
+                        <button
+                            id="compareBtn"
+                            class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-full font-medium hover:shadow-lg transition-all"
+                        >
+                            ⚖️ Compare (<span id="compareCount">0</span>)
+                        </button>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="loadingState" class="text-center py-20">
+                        <div
+                            class="inline-block w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin"
+                        >
+                        </div>
+                        <p class="text-stone-600 mt-4">Loading properties...</p>
+                    </div>
+
+                    <!-- Properties Grid -->
+                    <div
+                        id="propertiesGrid"
+                        class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                        style="display: none;"
+                    >
+                        <!-- Properties loaded by JavaScript -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div
+                        id="emptyState"
+                        class="text-center py-20 bg-white rounded-2xl"
+                        style="display: none;"
+                    >
+                        <div id="emptyStateMessage">
+                            <div
+                                class="inline-block p-6 bg-stone-50 rounded-full mb-4"
+                            >
+                                <svg
+                                    class="w-12 h-12 text-stone-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                                    ></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-stone-800 mb-2">
+                                No Properties Found
+                            </h3>
+                            <p class="text-stone-500" id="emptyStateText">
+                                Try adjusting your filters to see more results
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Panel -->
+        <div
+            id="comparisonPanel"
+            class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+        >
+            <div
+                class="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            >
+                <div class="flex justify-between items-center p-6 border-b">
+                    <h2 class="text-2xl font-bold">Property Comparison</h2>
+                    <button
+                        id="closeComparison"
+                        class="text-stone-600 hover:text-stone-900"
+                    >
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6">
+                    <div id="comparisonTableContainer" style="display: none;">
+                        <!-- Comparison table will be rendered here -->
+                    </div>
+                    <div id="comparisonEmpty" class="text-center py-20">
+                        <p class="text-stone-600">
+                            Click "Compare" on property cards to add them here
+                            (up to 3)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inline Styles for Bedroom Buttons -->
+    <style>
+        .bedroom-btn {
+            padding: 0.5rem;
+            border: 2px solid #e7e5e4;
+            border-radius: 0.5rem;
+            background: white;
+            color: #57534e;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .bedroom-btn:hover {
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
+        .bedroom-btn.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+            border-color: #f59e0b;
+            color: white;
+        }
+    </style>
+
+    <!-- Client-Side JavaScript -->
+    <script is:inline define:vars={{ initialType: propertyType }}>
+        let allProperties = [];
+        let filteredProperties = [];
+        let comparisonList = [];
+
+        const filters = {
+            search: "",
+            minPrice: null,
+            maxPrice: null,
+            city: "",
+            propertyType: "",
+            listingType: "",
+            featured: false,
+            bedrooms: "",
+            bathrooms: "",
+            minArea: null,
+            maxArea: null,
+            sortBy: "newest",
+            type: initialType, // 'sale', 'rent', or null for all (legacy)
+        };
+
+        async function loadProperties() {
+            const loadingState = document.getElementById("loadingState");
+            const propertiesGrid = document.getElementById("propertiesGrid");
+            const emptyState = document.getElementById("emptyState");
+
+            try {
+                console.log("Loading properties...");
+                console.log("ENV check:", {
+                    hasENV: !!window.ENV,
+                    hasURL: !!window.ENV?.SUPABASE_URL,
+                    hasKey: !!window.ENV?.SUPABASE_ANON_KEY,
+                    hasSupabase: !!window.supabase
+                });
+
+                if (
+                    !window.ENV?.SUPABASE_URL ||
+                    !window.ENV?.SUPABASE_ANON_KEY
+                ) {
+                    console.error("❌ Supabase not configured. Missing environment variables.");
+                    console.error("Please set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY in your .env file");
+                    loadingState.style.display = "none";
+                    emptyState.style.display = "block";
+                    const emptyStateText = document.getElementById("emptyStateText");
+                    if (emptyStateText) {
+                        emptyStateText.innerHTML = "Supabase is not configured. Please set up your environment variables.<br><small class='text-red-500'>Check the browser console for details.</small>";
+                    }
+                    return;
+                }
+
+                if (!window.supabase) {
+                    console.error("❌ Supabase client library not loaded");
+                    loadingState.style.display = "none";
+                    emptyState.style.display = "block";
+                    const emptyStateText = document.getElementById("emptyStateText");
+                    if (emptyStateText) {
+                        emptyStateText.innerHTML = "Supabase client library not loaded.<br><small class='text-red-500'>Make sure /admin/supabase.min.js is accessible.</small>";
+                    }
+                    return;
+                }
+
+                const { createClient } = window.supabase;
+                const supabase = createClient(
+                    window.ENV.SUPABASE_URL,
+                    window.ENV.SUPABASE_ANON_KEY,
+                );
+
+                console.log("Fetching properties from Supabase...");
+                const { data, error } = await supabase
+                    .from("properties")
+                    .select("*")
+                    .order("created_at", { ascending: false });
+
+                if (error) {
+                    console.error("❌ Supabase error:", error);
+                    throw error;
+                }
+
+                console.log(`✅ Loaded ${data?.length || 0} properties from database`);
+                allProperties = data || [];
+                console.log("All properties:", allProperties);
+                
+                if (allProperties.length === 0) {
+                    console.warn("⚠️ No properties found in database. Make sure you've run the SQL script to create sample data.");
+                    const emptyStateText = document.getElementById("emptyStateText");
+                    if (emptyStateText) {
+                        emptyStateText.innerHTML = "No properties in database yet.<br><small class='text-amber-600'>Run the create_properties_table.sql script in your Supabase SQL editor to add sample data.</small>";
+                    }
+                    loadingState.style.display = "none";
+                    emptyState.style.display = "block";
+                    return;
+                }
+                
+                applyFilters();
+
+                loadingState.style.display = "none";
+            } catch (error) {
+                console.error("❌ Error loading properties:", error);
+                loadingState.style.display = "none";
+                emptyState.style.display = "block";
+                const emptyStateText = document.getElementById("emptyStateText");
+                if (emptyStateText) {
+                    const errorMsg = error?.message || "Unknown error";
+                    emptyStateText.innerHTML = `Error loading properties: ${errorMsg}<br><small class='text-red-500'>Check the browser console for more details.</small>`;
+                }
+            }
+        }
+
+        function applyFilters() {
+            let results = [...allProperties];
+            console.log("🔍 Applying filters...");
+            console.log("Initial properties count:", results.length);
+            console.log("Current filters:", filters);
+
+            // Listing type filter (sale/rent) - prioritize listingTypeFilter over legacy type
+            if (filters.listingType) {
+                const filterValue = (filters.listingType || "").trim().toLowerCase();
+                results = results.filter((p) => {
+                    if (!p.listing_type) return false;
+                    return (p.listing_type || "").trim().toLowerCase() === filterValue;
+                });
+            } else if (filters.type) {
+                // Legacy type filter (sale/rent) - map to listing_type
+                const filterValue = (filters.type || "").trim().toLowerCase();
+                results = results.filter((p) => {
+                    if (!p.listing_type) return false;
+                    return (p.listing_type || "").trim().toLowerCase() === filterValue;
+                });
+            }
+
+            // Property type filter (house/apartment/land)
+            if (filters.propertyType) {
+                const filterValue = (filters.propertyType || "").trim().toLowerCase();
+                results = results.filter((p) => {
+                    if (!p.property_type) return false;
+                    return (p.property_type || "").trim().toLowerCase() === filterValue;
+                });
+            }
+
+            // Featured filter
+            if (filters.featured) {
+                results = results.filter((p) => p.featured === true);
+            }
+
+            // Bedrooms filter
+            if (filters.bedrooms) {
+                const minBedrooms = parseInt(filters.bedrooms);
+                results = results.filter((p) => p.bedrooms && p.bedrooms >= minBedrooms);
+            }
+
+            // Bathrooms filter
+            if (filters.bathrooms) {
+                const minBathrooms = parseInt(filters.bathrooms);
+                results = results.filter((p) => p.bathrooms && p.bathrooms >= minBathrooms);
+            }
+
+            // Area filter
+            if (filters.minArea) {
+                results = results.filter((p) => p.area_sqft && p.area_sqft >= filters.minArea);
+            }
+            if (filters.maxArea) {
+                results = results.filter((p) => p.area_sqft && p.area_sqft <= filters.maxArea);
+            }
+
+            // Search
+            if (filters.search) {
+                results = results.filter(
+                    (p) =>
+                        p.title.toLowerCase().includes(filters.search) ||
+                        (p.description &&
+                            p.description
+                                .toLowerCase()
+                                .includes(filters.search)) ||
+                        p.city.toLowerCase().includes(filters.search),
+                );
+            }
+
+            // Price
+            if (filters.minPrice)
+                results = results.filter((p) => p.price >= filters.minPrice);
+            if (filters.maxPrice)
+                results = results.filter((p) => p.price <= filters.maxPrice);
+
+            // City
+            if (filters.city)
+                results = results.filter((p) => p.city === filters.city);
+
+            // Legacy bedrooms filter (removed - using database field instead)
+            // This was filtering by regex on title/description, but we now use the bedrooms field
+
+            // Sort
+            results = sortProperties(results);
+
+            console.log("✅ Filtered properties count:", results.length);
+            filteredProperties = results;
+            renderProperties();
+            updateResultsCount();
+        }
+
+        function sortProperties(properties) {
+            const sorted = [...properties];
+            switch (filters.sortBy) {
+                case "newest":
+                    return sorted.sort(
+                        (a, b) =>
+                            new Date(b.created_at) - new Date(a.created_at),
+                    );
+                case "oldest":
+                    return sorted.sort(
+                        (a, b) =>
+                            new Date(a.created_at) - new Date(b.created_at),
+                    );
+                case "price-low":
+                    return sorted.sort((a, b) => a.price - b.price);
+                case "price-high":
+                    return sorted.sort((a, b) => b.price - a.price);
+                default:
+                    return sorted;
+            }
+        }
+
+        function renderProperties() {
+            const grid = document.getElementById("propertiesGrid");
+            const empty = document.getElementById("emptyState");
+
+            console.log("🎨 Rendering properties...");
+            console.log("Filtered properties to render:", filteredProperties.length);
+
+            if (filteredProperties.length === 0) {
+                console.warn("⚠️ No properties to display after filtering");
+                grid.style.display = "none";
+                empty.style.display = "block";
+                return;
+            }
+
+            empty.style.display = "none";
+            grid.style.display = "grid";
+            console.log("✅ Displaying grid with", filteredProperties.length, "properties");
+
+            grid.innerHTML = filteredProperties
+                .map((property) => {
+                    const isInComparison = comparisonList.some(
+                        (p) => p.id === property.id,
+                    );
+                    const propertyTypeLabel = property.property_type ? property.property_type.charAt(0).toUpperCase() + property.property_type.slice(1) : '';
+                    const listingTypeLabel = property.listing_type === 'rent' ? 'Rent' : property.listing_type === 'sale' ? 'Sale' : '';
+                    return `
+          <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer" onclick="window.location.href='/property/${property.id}'">
+            <div class="relative h-64 overflow-hidden">
+              <img src="${property.image_url}" alt="${property.title}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+              <div class="absolute top-4 left-4 flex flex-col gap-2">
+                <span class="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold">${property.city}</span>
+                ${property.featured ? '<span class="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">⭐ Featured</span>' : ''}
+              </div>
+              <button class="compare-btn absolute top-4 right-4 w-10 h-10 rounded-full ${isInComparison ? "bg-amber-600" : "bg-white"} ${isInComparison ? "text-white" : "text-stone-900"} flex items-center justify-center shadow-lg hover:scale-110 transition-all z-10" data-id="${property.id}" onclick="event.stopPropagation();">
+                ⚖️
+              </button>
+            </div>
+            <div class="p-6">
+              <div class="flex items-center gap-2 mb-2">
+                ${propertyTypeLabel ? `<span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-1 rounded">${propertyTypeLabel}</span>` : ''}
+                ${listingTypeLabel ? `<span class="text-xs font-semibold ${property.listing_type === 'rent' ? 'text-blue-600 bg-blue-50' : 'text-green-600 bg-green-50'} px-2 py-1 rounded">${listingTypeLabel}</span>` : ''}
+              </div>
+              <h3 class="font-bold text-xl text-stone-900 mb-2 line-clamp-1">${property.title}</h3>
+              ${(property.bedrooms || property.bathrooms || property.area_sqft) ? `
+              <div class="flex items-center gap-4 mb-3 text-sm text-slate-600">
+                ${property.bedrooms ? `<div class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                  </svg>
+                  <span>${property.bedrooms} Bed</span>
+                </div>` : ''}
+                ${property.bathrooms ? `<div class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  <span>${property.bathrooms} Bath</span>
+                </div>` : ''}
+                ${property.area_sqft ? `<div class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                  </svg>
+                  <span>${property.area_sqft.toLocaleString()} sqft</span>
+                </div>` : ''}
+              </div>
+              ` : ''}
+              <p class="text-stone-600 text-sm mb-4 line-clamp-2">${property.description || ""}</p>
+              <div class="flex justify-between items-center pt-4 border-t">
+                <div>
+                  <div class="text-xs text-stone-500 mb-1">${property.listing_type === 'rent' ? 'Monthly Rent' : 'Price'}</div>
+                  <div class="text-2xl font-bold text-amber-600">LKR ${formatPrice(property.price)}${property.listing_type === 'rent' ? '/mo' : ''}</div>
+                </div>
+                <a href="/property/${property.id}" class="text-amber-600 hover:text-amber-700 font-medium inline-flex items-center gap-1" onclick="event.stopPropagation();">
+                  View Details
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+                })
+                .join("");
+
+            // Add event listeners to compare buttons
+            document.querySelectorAll(".compare-btn").forEach((btn) => {
+                btn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const id = btn.dataset.id; // Keep as string for UUID
+                    const property = allProperties.find((p) => p.id === id);
+                    if (property) {
+                        toggleComparison(property);
+                    } else {
+                        console.error("Property not found with ID:", id);
+                    }
+                });
+            });
+        }
+
+        function toggleComparison(property) {
+            const index = comparisonList.findIndex((p) => p.id === property.id);
+            if (index > -1) {
+                comparisonList.splice(index, 1);
+            } else {
+                if (comparisonList.length >= 3) {
+                    alert("You can compare up to 3 properties");
+                    return;
+                }
+                comparisonList.push(property);
+            }
+            updateCompareButton();
+            renderProperties();
+        }
+
+        function updateCompareButton() {
+            document.getElementById("compareCount").textContent =
+                comparisonList.length;
+        }
+
+        function updateResultsCount() {
+            document.getElementById("resultsCount").textContent =
+                filteredProperties.length;
+        }
+
+        function formatPrice(price) {
+            if (price >= 10000000) return (price / 10000000).toFixed(1) + "M";
+            if (price >= 100000) return (price / 100000).toFixed(1) + "L";
+            return price.toLocaleString("en-US");
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function (...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), wait);
+            };
+        }
+
+        // Event Listeners
+        document.addEventListener("DOMContentLoaded", () => {
+            loadProperties();
+
+            const searchInput = document.getElementById("searchInput");
+            if (searchInput) {
+                searchInput.addEventListener(
+                    "input",
+                    debounce((e) => {
+                        filters.search = e.target.value.toLowerCase();
+                        applyFilters();
+                    }, 300),
+                );
+            }
+
+            const minPriceEl = document.getElementById("minPrice");
+            if (minPriceEl) {
+                minPriceEl.addEventListener(
+                    "input",
+                    debounce((e) => {
+                        filters.minPrice = e.target.value
+                            ? parseFloat(e.target.value)
+                            : null;
+                        applyFilters();
+                    }, 300),
+                );
+            }
+
+            const maxPriceEl = document.getElementById("maxPrice");
+            if (maxPriceEl) {
+                maxPriceEl.addEventListener(
+                    "input",
+                    debounce((e) => {
+                        filters.maxPrice = e.target.value
+                            ? parseFloat(e.target.value)
+                            : null;
+                        applyFilters();
+                    }, 300),
+                );
+            }
+
+            const cityFilterEl = document.getElementById("cityFilter");
+            if (cityFilterEl) {
+                cityFilterEl.addEventListener("change", (e) => {
+                    filters.city = e.target.value;
+                    applyFilters();
+                });
+            }
+
+            const propertyTypeFilterEl = document.getElementById("propertyTypeFilter");
+            if (propertyTypeFilterEl) {
+                propertyTypeFilterEl.addEventListener("change", function(e) {
+                    const target = e.target;
+                    if (target && target.value !== undefined) {
+                        filters.propertyType = target.value || "";
+                        console.log("Property Type filter changed to:", filters.propertyType);
+                        applyFilters();
+                    }
+                });
+            }
+
+            const listingTypeFilterEl = document.getElementById("listingTypeFilter");
+            if (listingTypeFilterEl) {
+                listingTypeFilterEl.addEventListener("change", function(e) {
+                    const target = e.target;
+                    if (target && target.value !== undefined) {
+                        filters.listingType = target.value || "";
+                        console.log("Listing Type filter changed to:", filters.listingType);
+                        applyFilters();
+                    }
+                });
+            }
+
+            const featuredFilterEl = document.getElementById("featuredFilter");
+            if (featuredFilterEl) {
+                featuredFilterEl.addEventListener("change", function(e) {
+                    const target = e.target;
+                    if (target && target.checked !== undefined) {
+                        filters.featured = target.checked || false;
+                        applyFilters();
+                    }
+                });
+            }
+
+            const bedroomsFilterEl = document.getElementById("bedroomsFilter");
+            if (bedroomsFilterEl) {
+                bedroomsFilterEl.addEventListener("change", function(e) {
+                    const target = e.target;
+                    if (target && target.value !== undefined) {
+                        filters.bedrooms = target.value || "";
+                        applyFilters();
+                    }
+                });
+            }
+
+            const bathroomsFilterEl = document.getElementById("bathroomsFilter");
+            if (bathroomsFilterEl) {
+                bathroomsFilterEl.addEventListener("change", function(e) {
+                    const target = e.target;
+                    if (target && target.value !== undefined) {
+                        filters.bathrooms = target.value || "";
+                        applyFilters();
+                    }
+                });
+            }
+
+            const minAreaEl = document.getElementById("minArea");
+            if (minAreaEl) {
+                minAreaEl.addEventListener(
+                    "input",
+                    debounce((e) => {
+                        filters.minArea = e.target.value
+                            ? parseFloat(e.target.value)
+                            : null;
+                        applyFilters();
+                    }, 300),
+                );
+            }
+
+            const maxAreaEl = document.getElementById("maxArea");
+            if (maxAreaEl) {
+                maxAreaEl.addEventListener(
+                    "input",
+                    debounce((e) => {
+                        filters.maxArea = e.target.value
+                            ? parseFloat(e.target.value)
+                            : null;
+                        applyFilters();
+                    }, 300),
+                );
+            }
+
+            // Bedroom buttons (if they exist - legacy support)
+            const bedroomButtons = document.querySelectorAll(".bedroom-btn");
+            if (bedroomButtons.length > 0) {
+                bedroomButtons.forEach((btn) => {
+                    btn.addEventListener("click", () => {
+                        document
+                            .querySelectorAll(".bedroom-btn")
+                            .forEach((b) => b.classList.remove("active"));
+                        btn.classList.add("active");
+                        filters.bedrooms = btn.dataset.bedrooms;
+                        applyFilters();
+                    });
+                });
+            }
+
+            const sortByEl = document.getElementById("sortBy");
+            if (sortByEl) {
+                sortByEl.addEventListener("change", (e) => {
+                    filters.sortBy = e.target.value;
+                    applyFilters();
+                });
+            }
+
+            const clearFiltersBtn = document.getElementById("clearFilters");
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener("click", () => {
+                    filters.search = "";
+                    filters.minPrice = null;
+                    filters.maxPrice = null;
+                    filters.city = "";
+                    filters.propertyType = "";
+                    filters.listingType = "";
+                    filters.featured = false;
+                    filters.bedrooms = "";
+                    filters.bathrooms = "";
+                    filters.minArea = null;
+                    filters.maxArea = null;
+                    filters.sortBy = "newest";
+
+                    const searchInput = document.getElementById("searchInput");
+                    if (searchInput) searchInput.value = "";
+                    const minPrice = document.getElementById("minPrice");
+                    if (minPrice) minPrice.value = "";
+                    const maxPrice = document.getElementById("maxPrice");
+                    if (maxPrice) maxPrice.value = "";
+                    const cityFilter = document.getElementById("cityFilter");
+                    if (cityFilter) cityFilter.value = "";
+                    const propertyTypeFilter = document.getElementById("propertyTypeFilter");
+                    if (propertyTypeFilter) propertyTypeFilter.value = "";
+                    const listingTypeFilter = document.getElementById("listingTypeFilter");
+                    if (listingTypeFilter) listingTypeFilter.value = "";
+                    const featuredFilter = document.getElementById("featuredFilter");
+                    if (featuredFilter && featuredFilter.type === 'checkbox') {
+                        featuredFilter.checked = false;
+                    }
+                    const bedroomsFilter = document.getElementById("bedroomsFilter");
+                    if (bedroomsFilter) bedroomsFilter.value = "";
+                    const bathroomsFilter = document.getElementById("bathroomsFilter");
+                    if (bathroomsFilter) bathroomsFilter.value = "";
+                    const minArea = document.getElementById("minArea");
+                    if (minArea) minArea.value = "";
+                    const maxArea = document.getElementById("maxArea");
+                    if (maxArea) maxArea.value = "";
+                    const sortBy = document.getElementById("sortBy");
+                    if (sortBy) sortBy.value = "newest";
+                    
+                    // Clear bedroom buttons if they exist (legacy support)
+                    const bedroomButtons = document.querySelectorAll(".bedroom-btn");
+                    if (bedroomButtons.length > 0) {
+                        bedroomButtons.forEach((b) => {
+                            if (b) b.classList.remove("active");
+                        });
+                        const anyBedroomBtn = document.querySelector('[data-bedrooms="any"]');
+                        if (anyBedroomBtn) {
+                            anyBedroomBtn.classList.add("active");
+                        }
+                    }
+
+                    applyFilters();
+                });
+            }
+
+            const compareBtn = document.getElementById("compareBtn");
+            if (compareBtn) {
+                compareBtn.addEventListener("click", () => {
+                    if (comparisonList.length === 0) {
+                        alert("Add properties to compare first!");
+                        return;
+                    }
+                    const comparisonPanel = document.getElementById("comparisonPanel");
+                    if (comparisonPanel) {
+                        comparisonPanel.classList.remove("hidden");
+                        renderComparison();
+                    }
+                });
+            }
+
+            const closeComparisonBtn = document.getElementById("closeComparison");
+            if (closeComparisonBtn) {
+                closeComparisonBtn.addEventListener("click", () => {
+                    const comparisonPanel = document.getElementById("comparisonPanel");
+                    if (comparisonPanel) {
+                        comparisonPanel.classList.add("hidden");
+                    }
+                });
+            }
+        });
+
+        function renderComparison() {
+            const container = document.getElementById("comparisonTableContainer");
+            const empty = document.getElementById("comparisonEmpty");
+
+            if (comparisonList.length === 0) {
+                if (container) container.style.display = "none";
+                empty.style.display = "block";
+                return;
+            }
+
+            empty.style.display = "none";
+            if (container) container.style.display = "block";
+
+            // Get all unique features from all properties
+            const allFeatures = new Set();
+            comparisonList.forEach(p => {
+                if (p.features) {
+                    p.features.split(',').forEach(f => {
+                        const trimmed = f.trim();
+                        if (trimmed) allFeatures.add(trimmed);
+                    });
+                }
+            });
+            const featuresArray = Array.from(allFeatures).sort();
+
+            // Build comparison table
+            let tableHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-stone-100">
+                                <th class="border border-stone-200 p-4 text-left font-bold text-stone-900 sticky left-0 bg-stone-100 z-20 min-w-[200px]">Property Details</th>
+                                ${comparisonList.map((p, idx) => `
+                                    <th class="border border-stone-200 p-4 text-center align-top">
+                                        <div class="space-y-3">
+                                            <img src="${p.image_url}" alt="${p.title}" class="w-full h-32 object-cover rounded-lg mb-2" />
+                                            <h3 class="font-bold text-lg">${p.title}</h3>
+                                            <button class="text-xs text-red-600 hover:text-red-700 font-medium" onclick="removeFromComparison('${p.id}')">Remove</button>
+                                        </div>
+                                    </th>
+                                `).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Price -->
+                            <tr class="bg-white hover:bg-stone-50">
+                                <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-white z-10">Price</td>
+                                ${comparisonList.map(p => `
+                                    <td class="border border-stone-200 p-4 text-center">
+                                        <span class="font-bold text-amber-600">LKR ${formatPrice(p.price)}${p.listing_type === 'rent' ? '/mo' : ''}</span>
+                                    </td>
+                                `).join('')}
+                            </tr>
+                            
+                            <!-- City -->
+                            <tr class="bg-stone-50 hover:bg-stone-100">
+                                <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-stone-50 z-10">Location</td>
+                                ${comparisonList.map(p => `
+                                    <td class="border border-stone-200 p-4 text-center">${p.city || '-'}</td>
+                                `).join('')}
+                            </tr>
+                            
+                            <!-- Property Type -->
+                            <tr class="bg-white hover:bg-stone-50">
+                                <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-white z-10">Property Type</td>
+                                ${comparisonList.map(p => `
+                                    <td class="border border-stone-200 p-4 text-center capitalize">${p.property_type || '-'}</td>
+                                `).join('')}
+                            </tr>
+                            
+                            <!-- Listing Type -->
+                            <tr class="bg-stone-50 hover:bg-stone-100">
+                                <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-stone-50 z-10">Listing Type</td>
+                                ${comparisonList.map(p => `
+                                    <td class="border border-stone-200 p-4 text-center capitalize">${p.listing_type === 'rent' ? 'For Rent' : p.listing_type === 'sale' ? 'For Sale' : '-'}</td>
+                                `).join('')}
+                            </tr>
+                            
+                            <!-- Bedrooms -->
+                            <tr class="bg-white hover:bg-stone-50">
+                                <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-white z-10">Bedrooms</td>
+                                ${comparisonList.map(p => `
+                                    <td class="border border-stone-200 p-4 text-center">
+                                        ${p.bedrooms ? `<span class="font-bold">${p.bedrooms}</span>` : '<span class="text-stone-400">-</span>'}
+                                    </td>
+                                `).join('')}
+                            </tr>
+                            
+                            <!-- Bathrooms -->
+                            <tr class="bg-stone-50 hover:bg-stone-100">
+                                <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-stone-50 z-10">Bathrooms</td>
+                                ${comparisonList.map(p => `
+                                    <td class="border border-stone-200 p-4 text-center">
+                                        ${p.bathrooms ? `<span class="font-bold">${p.bathrooms}</span>` : '<span class="text-stone-400">-</span>'}
+                                    </td>
+                                `).join('')}
+                            </tr>
+                            
+                            <!-- Area -->
+                            <tr class="bg-white hover:bg-stone-50">
+                                <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-white z-10">Area (sq ft)</td>
+                                ${comparisonList.map(p => `
+                                    <td class="border border-stone-200 p-4 text-center">
+                                        ${p.area_sqft ? `<span class="font-bold">${p.area_sqft.toLocaleString()}</span>` : '<span class="text-stone-400">-</span>'}
+                                    </td>
+                                `).join('')}
+                            </tr>
+                            
+                            <!-- Featured -->
+                            <tr class="bg-stone-50 hover:bg-stone-100">
+                                <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-stone-50 z-10">Featured</td>
+                                ${comparisonList.map(p => `
+                                    <td class="border border-stone-200 p-4 text-center">
+                                        ${p.featured ? '<span class="text-green-600 font-bold">✓ Yes</span>' : '<span class="text-stone-400">-</span>'}
+                                    </td>
+                                `).join('')}
+                            </tr>
+                            
+                            <!-- Features -->
+                            ${featuresArray.length > 0 ? featuresArray.map(feature => `
+                                <tr class="bg-white hover:bg-stone-50">
+                                    <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-white z-10">${feature}</td>
+                                    ${comparisonList.map(p => {
+                                        const hasFeature = p.features && p.features.split(',').some(f => f.trim().toLowerCase() === feature.toLowerCase());
+                                        return `
+                                            <td class="border border-stone-200 p-4 text-center">
+                                                ${hasFeature ? '<span class="text-green-600 font-bold text-lg">✓</span>' : '<span class="text-stone-300">✗</span>'}
+                                            </td>
+                                        `;
+                                    }).join('')}
+                                </tr>
+                            `).join('') : ''}
+                            
+                            <!-- Description -->
+                            <tr class="bg-stone-50">
+                                <td class="border border-stone-200 p-4 font-semibold text-stone-700 sticky left-0 bg-stone-50 z-10 align-top">Description</td>
+                                ${comparisonList.map(p => `
+                                    <td class="border border-stone-200 p-4 text-sm text-stone-600">${p.description || '<span class="text-stone-400">No description</span>'}</td>
+                                `).join('')}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            if (container) {
+                container.innerHTML = tableHTML;
+            }
+        }
+
+        function removeFromComparison(id) {
+            comparisonList = comparisonList.filter((p) => p.id !== id);
+            updateCompareButton();
+            renderComparison();
+            renderProperties();
+        }
+        
+        // Make removeFromComparison available globally for onclick handlers
+        window.removeFromComparison = removeFromComparison;
+    </script>
+</Layout>
