@@ -1,0 +1,6 @@
+# Cloudflare Pages redirects
+# Route all property detail pages to the catch-all route
+# Note: Cloudflare Pages Functions (functions/[[path]].js) handles this more reliably
+# This file is kept as a fallback
+/property/* /property/index 200
+

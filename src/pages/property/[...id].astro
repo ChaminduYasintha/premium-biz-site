@@ -2,16 +2,20 @@
 import Layout from "../../layouts/Layout.astro";
 
 // Static page - property data is loaded client-side via JavaScript
+// Catch-all route: handles /property/* paths for Cloudflare Pages
 export async function getStaticPaths() {
-  // Return a placeholder path for static build
+  // Return multiple paths to ensure the route is generated
   // All property IDs are handled client-side via JavaScript based on the URL
+  // For catch-all routes, provide strings (Astro will convert them to arrays internally)
   return [
-    { params: { id: 'index' } }
+    { params: { id: 'index' } },
+    { params: { id: 'placeholder' } } // Additional path to ensure route is generated
   ];
 }
 
-// Get property ID from URL
+// Get property ID from URL (catch-all returns array at runtime)
 const { id } = Astro.params;
+const propertyId = Array.isArray(id) ? id[0] : (id || "");
 
 const WHATSAPP_NUMBER =
   import.meta.env.PUBLIC_WHATSAPP_NUMBER || "+94771234567";
@@ -155,19 +159,42 @@ const WHATSAPP_NUMBER =
     }
   </style>
 
-  <script define:vars={{ propertyId: id || "", whatsappNumber: WHATSAPP_NUMBER }}>
+  <script define:vars={{ propertyId: propertyId || "", whatsappNumber: WHATSAPP_NUMBER }}>
     async function loadProperty() {
       const loading = document.getElementById("loading");
       const detail = document.getElementById("property-detail");
       const notFound = document.getElementById("not-found");
 
-      // Get property ID from URL if not passed via define:vars
-      let actualPropertyId = propertyId || "";
+      // Get property ID from URL
+      // Extract from the current URL path
+      let actualPropertyId = "";
+      const currentPath = window.location.pathname;
+      
+      // Match /property/{uuid} pattern
+      const propertyMatch = currentPath.match(/\/property\/([^\/]+)/);
+      if (propertyMatch && propertyMatch[1]) {
+        actualPropertyId = propertyMatch[1];
+      }
+      
+      // Fallback: try to get from path parts
       if (!actualPropertyId) {
-        const pathParts = window.location.pathname.split("/");
-        const idFromPath = pathParts[pathParts.length - 1];
-        if (idFromPath && idFromPath !== "property") {
-          actualPropertyId = idFromPath;
+        const pathParts = currentPath.split("/").filter(p => p);
+        const propertyIndex = pathParts.indexOf("property");
+        
+        if (propertyIndex >= 0 && pathParts.length > propertyIndex + 1) {
+          actualPropertyId = pathParts[propertyIndex + 1];
+        }
+      }
+      
+      // Additional fallback: get last segment if it looks like a UUID
+      if (!actualPropertyId) {
+        const pathParts = currentPath.split("/").filter(p => p);
+        if (pathParts.length > 0) {
+          const lastSegment = pathParts[pathParts.length - 1];
+          // UUID pattern: contains hyphens and is not 'index' or 'property'
+          if (lastSegment.includes("-") && lastSegment !== "index" && lastSegment !== "property") {
+            actualPropertyId = lastSegment;
+          }
         }
       }
 
@@ -394,7 +421,7 @@ const WHATSAPP_NUMBER =
                       : ""
                   }
 
-                  <!-- Floor Plan Section (in tabs if exists) -->
+                  <!-- Floor Plan Section -->
                   ${
                     property.plan_url
                       ? `
@@ -408,23 +435,6 @@ const WHATSAPP_NUMBER =
                       <h2 class="text-2xl font-bold text-slate-900">Floor Plan</h2>
                     </div>
                     <div class="bg-slate-50 rounded-2xl p-8 shadow-lg">
-                      <img 
-                        src="${property.plan_url}" 
-                        alt="Floor Plan" 
-                        class="w-full h-auto rounded-lg"
-                      />
-                    </div>
-                  </div>
-                  `
-                      : ""
-                  }
-
-                  ${
-                    property.plan_url
-                      ? `
-                  <div id="tab-plan" class="tab-content" style="display: none;">
-                    <h2 class="text-2xl font-bold text-slate-900 mb-4">Floor Plan</h2>
-                    <div class="bg-slate-50 rounded-2xl p-8">
                       <img 
                         src="${property.plan_url}" 
                         alt="Floor Plan" 
@@ -508,3 +518,4 @@ const WHATSAPP_NUMBER =
     document.addEventListener("DOMContentLoaded", loadProperty);
   </script>
 </Layout>
+
