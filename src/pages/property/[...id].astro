@@ -243,6 +243,45 @@ const WHATSAPP_NUMBER =
 
         const youtubeEmbedUrl = getYouTubeEmbedUrl(property.youtube_url);
 
+        // Extract coordinates from Google Maps URL for embed
+        const getGoogleMapsCoords = (url) => {
+          if (!url || !url.includes('google.com/maps')) return null;
+          
+          // Extract coordinates from URL
+          // Pattern: @lat,lng or @lat,lng,zoom
+          const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+          if (coordMatch) {
+            return {
+              lat: coordMatch[1],
+              lng: coordMatch[2]
+            };
+          }
+          
+          // Extract place name
+          const placeMatch = url.match(/\/maps\/place\/([^\/@]+)/);
+          if (placeMatch) {
+            return {
+              place: placeMatch[1].replace(/\+/g, ' ')
+            };
+          }
+          
+          return null;
+        };
+
+        // Check if view_360_url is a Google Maps URL
+        const isGoogleMaps = property.view_360_url && property.view_360_url.includes('google.com/maps');
+        const googleMapsCoords = isGoogleMaps ? getGoogleMapsCoords(property.view_360_url) : null;
+        
+        // Create embed URL if we have coordinates
+        let googleMapsEmbedUrl = null;
+        if (googleMapsCoords && googleMapsCoords.lat && googleMapsCoords.lng) {
+          // Use Google Maps Embed API with coordinates
+          googleMapsEmbedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022!2d${googleMapsCoords.lng}!3d${googleMapsCoords.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDQ1JzMyLjAiTiA3M8KwNTknMTcuMiJX!5e0!3m2!1sen!2sus!4v1234567890123!5m2!1sen!2sus`;
+        } else if (googleMapsCoords && googleMapsCoords.place) {
+          // Use place name
+          googleMapsEmbedUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022!2d-73.988!3d40.758!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDQ1JzMyLjAiTiA3M8KwNTknMTcuMiJX!5e0!3m2!1sen!2sus!4v1234567890123!5m2!1sen!2sus&q=${encodeURIComponent(googleMapsCoords.place)}`;
+        }
+
         // Render property details
         detail.innerHTML = `
           <div class="bg-white">
@@ -399,14 +438,50 @@ const WHATSAPP_NUMBER =
                       ? `
                   <div class="space-y-4">
                     <div class="flex items-center gap-3">
-                      <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                      <div class="w-12 h-12 bg-gradient-to-br ${isGoogleMaps ? 'from-green-500 to-green-600' : 'from-blue-500 to-blue-600'} rounded-lg flex items-center justify-center">
+                        ${isGoogleMaps ? `
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        ` : `
                         <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
                         </svg>
+                        `}
                       </div>
-                      <h2 class="text-2xl font-bold text-slate-900">360° Virtual Tour</h2>
+                      <h2 class="text-2xl font-bold text-slate-900">${isGoogleMaps ? 'Google Maps 360° View' : '360° Virtual Tour'}</h2>
                     </div>
                     <div class="aspect-video bg-slate-100 rounded-2xl overflow-hidden shadow-lg">
+                      ${isGoogleMaps ? `
+                      ${googleMapsEmbedUrl ? `
+                      <!-- Google Maps Embed with extracted coordinates -->
+                      <iframe 
+                        width="100%" 
+                        height="100%" 
+                        src="${googleMapsEmbedUrl}" 
+                        frameborder="0" 
+                        style="border:0"
+                        allowfullscreen
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        class="w-full h-full"
+                      ></iframe>
+                      ` : `
+                      <!-- Fallback: Direct link if we can't create embed URL -->
+                      <div class="flex flex-col items-center justify-center h-full p-8 text-center">
+                        <svg class="w-16 h-16 text-slate-400 mb-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        <p class="text-slate-600 mb-4">Click below to view the location on Google Maps</p>
+                        <a href="${property.view_360_url}" target="_blank" rel="noopener noreferrer" class="btn-primary">
+                          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                          </svg>
+                          Open in Google Maps
+                        </a>
+                      </div>
+                      `}
+                      ` : `
                       <iframe 
                         width="100%" 
                         height="100%" 
@@ -415,7 +490,23 @@ const WHATSAPP_NUMBER =
                         allowfullscreen
                         class="w-full h-full"
                       ></iframe>
+                      `}
                     </div>
+                    ${isGoogleMaps ? `
+                    <div class="text-center">
+                      <a 
+                        href="${property.view_360_url}" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        View on Google Maps
+                      </a>
+                    </div>
+                    ` : ''}
                   </div>
                   `
                       : ""
