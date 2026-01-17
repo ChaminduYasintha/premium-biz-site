@@ -53,12 +53,22 @@ The property detail pages use a catch-all route (`/property/[...id]`) that works
 
 **Cloudflare Pages Function**: A `functions/[[path]].js` file has been created to handle routing. This function automatically rewrites all `/property/*` requests (except `/property/index`) to serve the `/property/index.html` page, which then uses client-side JavaScript to load the correct property data.
 
-If you still see 404 errors for property detail pages after deployment:
+If you still see 404 errors or redirects to home for property detail pages:
 
-1. **Check the build output**: Ensure `dist/property/index.html` exists after build
-2. **Verify Functions are deployed**: Check Cloudflare Pages dashboard → Functions tab to see if `[[path]].js` is listed
-3. **Check function logs**: Go to Cloudflare Pages dashboard → Logs to see if the function is executing
-4. **Test locally**: Run `npm run build` and verify the structure in `dist` folder
+1. **Check the build output**: Ensure `dist/property/index/index.html` exists after build
+2. **Verify Functions are deployed**:
+   - Go to Cloudflare Pages dashboard → Your project → Functions tab
+   - You should see `[[path]].js` listed
+   - If not, ensure the `functions` folder is committed to your repository
+3. **Check function logs**:
+   - Go to Cloudflare Pages dashboard → Logs
+   - Look for errors or see if the function is being called
+4. **Disable custom 404 redirect**:
+   - Go to Cloudflare Pages dashboard → Your project → Settings → Builds & deployments
+   - Look for "Custom 404" or "404 page" settings
+   - If there's a redirect to home configured, disable it
+5. **Verify the function path**: The function should be at `functions/[[path]].js` in your repository root
+6. **Test locally**: Run `npm run build` and verify the structure in `dist` folder
 
 ### Vercel
 

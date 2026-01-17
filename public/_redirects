@@ -2,5 +2,6 @@
 # Route all property detail pages to the catch-all route
 # Note: Cloudflare Pages Functions (functions/[[path]].js) handles this more reliably
 # This file is kept as a fallback
-/property/* /property/index 200
+# Format: /source /destination status_code
+/property/* /property/index/index.html 200
 
