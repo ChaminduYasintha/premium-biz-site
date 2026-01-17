@@ -360,29 +360,6 @@ const pageTitle =
         </div>
     </div>
 
-    <!-- Inline Styles for Bedroom Buttons -->
-    <style>
-        .bedroom-btn {
-            padding: 0.5rem;
-            border: 2px solid #e7e5e4;
-            border-radius: 0.5rem;
-            background: white;
-            color: #57534e;
-            font-weight: 500;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .bedroom-btn:hover {
-            border-color: #f59e0b;
-            color: #f59e0b;
-        }
-        .bedroom-btn.active {
-            background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
-            border-color: #f59e0b;
-            color: white;
-        }
-    </style>
-
     <!-- Client-Side JavaScript -->
     <script is:inline define:vars={{ initialType: propertyType }}>
         let allProperties = [];
@@ -402,7 +379,7 @@ const pageTitle =
             minArea: null,
             maxArea: null,
             sortBy: "newest",
-            type: initialType, // 'sale', 'rent', or null for all (legacy)
+            type: initialType, // 'sale', 'rent', or null for all
         };
 
         async function loadProperties() {
@@ -451,7 +428,6 @@ const pageTitle =
                     window.ENV.SUPABASE_ANON_KEY,
                 );
 
-                console.log("Fetching properties from Supabase...");
                 const { data, error } = await supabase
                     .from("properties")
                     .select("*")
@@ -462,9 +438,12 @@ const pageTitle =
                     throw error;
                 }
 
-                console.log(`✅ Loaded ${data?.length || 0} properties from database`);
                 allProperties = data || [];
-                console.log("All properties:", allProperties);
+                
+                // Debug logging (remove in production if needed)
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.log(`✅ Loaded ${data?.length || 0} properties from database`);
+                }
                 
                 if (allProperties.length === 0) {
                     console.warn("⚠️ No properties found in database. Make sure you've run the SQL script to create sample data.");
@@ -494,9 +473,13 @@ const pageTitle =
 
         function applyFilters() {
             let results = [...allProperties];
-            console.log("🔍 Applying filters...");
-            console.log("Initial properties count:", results.length);
-            console.log("Current filters:", filters);
+            
+            // Debug logging (remove in production if needed)
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log("🔍 Applying filters...");
+                console.log("Initial properties count:", results.length);
+                console.log("Current filters:", filters);
+            }
 
             // Listing type filter (sale/rent) - prioritize listingTypeFilter over legacy type
             if (filters.listingType) {
@@ -571,13 +554,9 @@ const pageTitle =
             if (filters.city)
                 results = results.filter((p) => p.city === filters.city);
 
-            // Legacy bedrooms filter (removed - using database field instead)
-            // This was filtering by regex on title/description, but we now use the bedrooms field
-
             // Sort
             results = sortProperties(results);
 
-            console.log("✅ Filtered properties count:", results.length);
             filteredProperties = results;
             renderProperties();
             updateResultsCount();
@@ -609,11 +588,7 @@ const pageTitle =
             const grid = document.getElementById("propertiesGrid");
             const empty = document.getElementById("emptyState");
 
-            console.log("🎨 Rendering properties...");
-            console.log("Filtered properties to render:", filteredProperties.length);
-
             if (filteredProperties.length === 0) {
-                console.warn("⚠️ No properties to display after filtering");
                 grid.style.display = "none";
                 empty.style.display = "block";
                 return;
@@ -621,7 +596,6 @@ const pageTitle =
 
             empty.style.display = "none";
             grid.style.display = "grid";
-            console.log("✅ Displaying grid with", filteredProperties.length, "properties");
 
             grid.innerHTML = filteredProperties
                 .map((property) => {
@@ -799,7 +773,6 @@ const pageTitle =
                     const target = e.target;
                     if (target && target.value !== undefined) {
                         filters.propertyType = target.value || "";
-                        console.log("Property Type filter changed to:", filters.propertyType);
                         applyFilters();
                     }
                 });
@@ -811,7 +784,6 @@ const pageTitle =
                     const target = e.target;
                     if (target && target.value !== undefined) {
                         filters.listingType = target.value || "";
-                        console.log("Listing Type filter changed to:", filters.listingType);
                         applyFilters();
                     }
                 });
@@ -876,21 +848,6 @@ const pageTitle =
                 );
             }
 
-            // Bedroom buttons (if they exist - legacy support)
-            const bedroomButtons = document.querySelectorAll(".bedroom-btn");
-            if (bedroomButtons.length > 0) {
-                bedroomButtons.forEach((btn) => {
-                    btn.addEventListener("click", () => {
-                        document
-                            .querySelectorAll(".bedroom-btn")
-                            .forEach((b) => b.classList.remove("active"));
-                        btn.classList.add("active");
-                        filters.bedrooms = btn.dataset.bedrooms;
-                        applyFilters();
-                    });
-                });
-            }
-
             const sortByEl = document.getElementById("sortBy");
             if (sortByEl) {
                 sortByEl.addEventListener("change", (e) => {
@@ -942,17 +899,6 @@ const pageTitle =
                     const sortBy = document.getElementById("sortBy");
                     if (sortBy) sortBy.value = "newest";
                     
-                    // Clear bedroom buttons if they exist (legacy support)
-                    const bedroomButtons = document.querySelectorAll(".bedroom-btn");
-                    if (bedroomButtons.length > 0) {
-                        bedroomButtons.forEach((b) => {
-                            if (b) b.classList.remove("active");
-                        });
-                        const anyBedroomBtn = document.querySelector('[data-bedrooms="any"]');
-                        if (anyBedroomBtn) {
-                            anyBedroomBtn.classList.add("active");
-                        }
-                    }
 
                     applyFilters();
                 });

@@ -690,14 +690,6 @@ const BUSINESS_NAME =
       const propertyCount = document.getElementById("property-count");
 
       try {
-        console.log("🏠 Homepage: Loading featured properties...");
-        console.log("🏠 ENV check:", {
-          hasENV: !!window.ENV,
-          hasURL: !!window.ENV?.SUPABASE_URL,
-          hasKey: !!window.ENV?.SUPABASE_ANON_KEY,
-          hasSupabase: !!window.supabase,
-          url: window.ENV?.SUPABASE_URL ? window.ENV.SUPABASE_URL.substring(0, 30) + "..." : "missing"
-        });
 
         if (!window.ENV?.SUPABASE_URL || !window.ENV?.SUPABASE_ANON_KEY) {
           console.error("❌ Homepage: Supabase not configured");
@@ -719,7 +711,6 @@ const BUSINESS_NAME =
           window.ENV.SUPABASE_ANON_KEY,
         );
 
-        console.log("🏠 Homepage: Fetching featured properties...");
         const { data, error } = await supabase
           .from("properties")
           .select("*")
@@ -731,8 +722,6 @@ const BUSINESS_NAME =
           console.error("❌ Homepage: Supabase error:", error);
           throw error;
         }
-
-        console.log(`🏠 Homepage: ✅ Loaded ${data?.length || 0} featured properties`);
 
         if (loading) loading.style.display = "none";
 

@@ -2,17 +2,15 @@
 import Layout from "../../layouts/Layout.astro";
 
 // Static page - property data is loaded client-side via JavaScript
-// For static builds, we provide getStaticPaths that returns at least one path
-// All property IDs are handled client-side via JavaScript based on the URL
 export async function getStaticPaths() {
   // Return a placeholder path for static build
-  // The actual property data is loaded client-side based on the URL
+  // All property IDs are handled client-side via JavaScript based on the URL
   return [
     { params: { id: 'index' } }
   ];
 }
 
-// Get property ID from URL (will be 'index' for the static build, but actual IDs work client-side)
+// Get property ID from URL
 const { id } = Astro.params;
 
 const WHATSAPP_NUMBER =
